@@ -4,7 +4,6 @@ import { ArrowRight, LockKeyhole, UserRound } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import AppleLiquidGlass from "@/components/liquid-glass/AppleLiquidGlass";
-import LiquidBackground from "@/components/liquid-glass/LiquidBackground";
 import LiquidGlassRenderer from "@/components/liquid-glass/LiquidGlassRenderer";
 
 type LoginResponse = {
@@ -63,12 +62,10 @@ export default function LoginPage() {
   return (
     <main
       className="relative flex min-h-screen items-center justify-center overflow-hidden px-6"
-      style={{ background: "rgb(5,5,7)" }}
     >
-      <LiquidBackground />
       <LiquidGlassRenderer />
 
-      <section className="relative z-10 w-full max-w-[760px]">
+      <section className="relative z-10 w-full max-w-[900px]">
         <AppleLiquidGlass className="h-[430px] w-full" radius={42}>
           <form onSubmit={handleSubmit} className="relative z-10 p-10">
             <div
