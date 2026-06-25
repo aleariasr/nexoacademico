@@ -12,6 +12,7 @@ const lenses = new Map<string, Lens>();
 
 export function registerLiquidLens(lens: Lens): () => void {
   lenses.set(lens.id, lens);
+
   return () => {
     lenses.delete(lens.id);
   };
@@ -83,81 +84,122 @@ export default function LiquidGlassRenderer() {
         );
       }
 
-      float metaball(vec2 p, vec2 c, float r) {
-        float d = length(p - c);
-        return (r * r) / max(d * d, 0.0008);
+      float fbm(vec2 p) {
+        float value = 0.0;
+        float amp = 0.5;
+
+        for (int i = 0; i < 5; i++) {
+          value += noise(p) * amp;
+          p *= 2.02;
+          amp *= 0.48;
         }
 
-        vec3 scene(vec2 uv) {
+        return value;
+      }
+
+      float metaball(vec2 p, vec2 c, float r) {
+        vec2 d = p - c;
+        return (r * r) / max(dot(d, d), 0.0007);
+      }
+
+      float softMass(float field, float low, float high) {
+        return smoothstep(low, high, field);
+      }
+
+      vec3 scene(vec2 uv) {
         vec2 p = uv;
 
-        vec3 baseTop = vec3(0.018, 0.010, 0.022);
-        vec3 baseBottom = vec3(0.110, 0.022, 0.070);
-        vec3 col = mix(baseTop, baseBottom, p.y);
+        float aspect = u_screen.x / u_screen.y;
+        vec2 q = vec2((p.x - 0.5) * aspect + 0.5, p.y);
 
-        vec2 c1 = vec2(0.14 + sin(u_time * 0.20) * 0.10, 0.18 + cos(u_time * 0.16) * 0.14);
-        vec2 c2 = vec2(0.78 + sin(u_time * 0.15) * 0.12, 0.24 + cos(u_time * 0.19) * 0.12);
-        vec2 c3 = vec2(0.30 + sin(u_time * 0.13) * 0.14, 0.82 + cos(u_time * 0.17) * 0.10);
-        vec2 c4 = vec2(0.66 + sin(u_time * 0.18) * 0.10, 0.70 + cos(u_time * 0.14) * 0.12);
-        vec2 c5 = vec2(0.48 + sin(u_time * 0.11) * 0.16, 0.48 + cos(u_time * 0.12) * 0.15);
-        vec2 c6 = vec2(0.92 + sin(u_time * 0.10) * 0.08, 0.82 + cos(u_time * 0.13) * 0.10);
-
-        float m1 = metaball(p, c1, 0.135);
-        float m2 = metaball(p, c2, 0.155);
-        float m3 = metaball(p, c3, 0.170);
-        float m4 = metaball(p, c4, 0.125);
-        float m5 = metaball(p, c5, 0.115);
-        float m6 = metaball(p, c6, 0.135);
-
-        float pink = smoothstep(0.82, 1.52, m1 + m2 + m5 * 0.7);
-        float purple = smoothstep(0.76, 1.42, m3 + m5 * 0.85);
-        float cream = smoothstep(0.72, 1.34, m4 + m6 * 0.7);
-
-        float innerPink = smoothstep(1.4, 2.8, m1 + m2);
-        float innerPurple = smoothstep(1.3, 2.4, m3 + m5);
-        float innerCream = smoothstep(1.2, 2.2, m4 + m6);
-
-        col = mix(col, vec3(1.00, 0.05, 0.35), pink * 0.92);
-        col = mix(col, vec3(0.44, 0.15, 1.00), purple * 0.72);
-        col = mix(col, vec3(1.00, 0.82, 0.62), cream * 0.58);
-
-        col += vec3(1.0, 0.24, 0.56) * innerPink * 0.32;
-        col += vec3(0.42, 0.18, 1.0) * innerPurple * 0.24;
-        col += vec3(1.0, 0.92, 0.78) * innerCream * 0.20;
-
-        float darkPocket = smoothstep(
-            0.45,
-            0.92,
-            metaball(p, vec2(0.54 + sin(u_time * 0.08) * 0.10, 0.48 + cos(u_time * 0.09) * 0.10), 0.11)
+        vec3 col = mix(
+          vec3(0.010, 0.009, 0.018),
+          vec3(0.075, 0.022, 0.052),
+          p.y
         );
 
-        col *= 1.0 - darkPocket * 0.58;
+        float t = u_time * 0.42;
 
-        float sweep = smoothstep(
-            0.028,
-            0.0,
-            abs((p.x - p.y * 0.38) - (0.24 + sin(u_time * 0.10) * 0.18))
-        );
+        vec2 a1 = vec2(0.14 + sin(t * 0.45) * 0.10, 0.22 + cos(t * 0.52) * 0.13);
+        vec2 a2 = vec2(0.82 + sin(t * 0.38 + 1.7) * 0.11, 0.20 + cos(t * 0.47) * 0.10);
+        vec2 a3 = vec2(0.32 + sin(t * 0.34 + 2.1) * 0.15, 0.84 + cos(t * 0.40) * 0.10);
+        vec2 a4 = vec2(0.68 + sin(t * 0.42 + 4.4) * 0.13, 0.76 + cos(t * 0.36) * 0.12);
+        vec2 a5 = vec2(0.50 + sin(t * 0.30 + 0.9) * 0.17, 0.50 + cos(t * 0.33) * 0.15);
+        vec2 a6 = vec2(0.95 + sin(t * 0.28 + 2.8) * 0.10, 0.56 + cos(t * 0.35) * 0.18);
+        vec2 a7 = vec2(0.03 + sin(t * 0.31 + 5.0) * 0.12, 0.64 + cos(t * 0.41) * 0.14);
 
-        col += vec3(1.0) * sweep * 0.12;
+        float pinkField =
+          metaball(p, a1, 0.20) +
+          metaball(p, a2, 0.22) +
+          metaball(p, a6, 0.16);
 
-        float vignette = smoothstep(0.95, 0.22, distance(p, vec2(0.5)));
-        col *= mix(0.38, 1.12, vignette);
+        float purpleField =
+          metaball(p, a3, 0.22) +
+          metaball(p, a5, 0.18);
 
-        float grain = noise(p * u_screen * 0.50 + u_time * 0.22);
-        col += (grain - 0.5) * 0.045;
+        float warmField =
+          metaball(p, a4, 0.18) +
+          metaball(p, vec2(0.54 + sin(t * 0.26) * 0.08, 0.12 + cos(t * 0.30) * 0.08), 0.17);
+
+        float edgeNoise = fbm(p * 3.0 + vec2(t * 0.12, -t * 0.10));
+
+        float pink = softMass(pinkField + edgeNoise * 0.16, 0.58, 1.20);
+        float purple = softMass(purpleField + edgeNoise * 0.14, 0.56, 1.12);
+        float warm = softMass(warmField + edgeNoise * 0.12, 0.54, 1.05);
+
+        vec3 pinkCol = vec3(1.00, 0.06, 0.34);
+        vec3 purpleCol = vec3(0.42, 0.16, 1.00);
+        vec3 warmCol = vec3(1.00, 0.78, 0.58);
+
+        col = mix(col, pinkCol, pink * 0.88);
+        col = mix(col, purpleCol, purple * 0.74);
+        col = mix(col, warmCol, warm * 0.58);
+
+        float whiteGlow =
+          softMass(
+            metaball(p, vec2(0.44 + sin(t * 0.22) * 0.08, 0.19 + cos(t * 0.25) * 0.06), 0.15),
+            0.50,
+            1.18
+          );
+
+        col += vec3(1.0, 0.90, 0.92) * whiteGlow * 0.48;
+
+        float darkPocket =
+          softMass(
+            metaball(p, vec2(0.56 + sin(t * 0.20) * 0.12, 0.50 + cos(t * 0.21) * 0.10), 0.14),
+            0.46,
+            1.10
+          );
+
+        col *= 1.0 - darkPocket * 0.55;
+
+        float horizontalGlow =
+          smoothstep(0.65, 0.48, abs(p.y - (0.62 + sin(t * 0.24) * 0.05))) *
+          smoothstep(0.0, 0.35, p.x) *
+          smoothstep(1.0, 0.60, p.x);
+
+        col += vec3(0.42, 0.58, 1.00) * horizontalGlow * 0.16;
+
+        float liquidShade = fbm(p * 6.0 + vec2(-t * 0.18, t * 0.14));
+        col *= 0.88 + liquidShade * 0.20;
+
+        float vignette = smoothstep(0.95, 0.28, distance(p, vec2(0.5)));
+        col *= mix(0.34, 1.10, vignette);
+
+        float grain = noise(p * u_screen * 0.42 + u_time * 0.18);
+        col += (grain - 0.5) * 0.030;
 
         return clamp(col, 0.0, 1.0);
-        }
+      }
 
-        float edgeFactor(vec2 uv, float radius_px) {
-            vec2 p_px = (uv - 0.5) * u_resolution;
-            vec2 b_px = 0.5 * u_resolution;
-            float d = -udRoundBox(p_px, b_px, radius_px);
-            float bevel_px = u_bevelWidth * min(u_resolution.x, u_resolution.y);
+      float edgeFactor(vec2 uv, float radius_px) {
+        vec2 p_px = (uv - 0.5) * u_resolution;
+        vec2 b_px = 0.5 * u_resolution;
+        float d = -udRoundBox(p_px, b_px, radius_px);
+        float bevel_px = u_bevelWidth * min(u_resolution.x, u_resolution.y);
 
-            return 1.0 - smoothstep(0.0, bevel_px, d);
-            }
+        return 1.0 - smoothstep(0.0, bevel_px, d);
+      }
 
       vec4 glass(vec2 local) {
         vec2 p = local - 0.5;
@@ -192,23 +234,23 @@ export default function LiquidGlassRenderer() {
 
         vec3 col = refrCol;
 
-        vec3 redShift = scene(screenUV + offset * 1.18 + vec2(0.0035, 0.0));
-        vec3 blueShift = scene(screenUV + offset * 0.82 - vec2(0.0035, 0.0));
+        vec3 redShift = scene(screenUV + offset * 1.16 + vec2(0.0028, 0.0));
+        vec3 blueShift = scene(screenUV + offset * 0.84 - vec2(0.0028, 0.0));
 
-        col.r = mix(col.r, redShift.r, edge * 0.65);
-        col.b = mix(col.b, blueShift.b, edge * 0.65);
+        col.r = mix(col.r, redShift.r, edge * 0.56);
+        col.b = mix(col.b, blueShift.b, edge * 0.56);
 
         float diff = clamp(length(refrCol - baseCol) * 4.0, 0.0, 1.0);
         float antiHalo = (1.0 - centreBlend) * diff;
-        col = mix(col, baseCol, antiHalo * 0.38);
+        col = mix(col, baseCol, antiHalo * 0.34);
 
         if (u_specular) {
-          vec2 lp1 = vec2(sin(u_time * 0.20), cos(u_time * 0.30)) * 0.6 + 0.5;
-          vec2 lp2 = vec2(sin(u_time * -0.40 + 1.5), cos(u_time * 0.25 - 0.5)) * 0.6 + 0.5;
+          vec2 lp1 = vec2(sin(u_time * 0.18), cos(u_time * 0.24)) * 0.58 + 0.5;
+          vec2 lp2 = vec2(sin(u_time * -0.32 + 1.5), cos(u_time * 0.20 - 0.5)) * 0.58 + 0.5;
 
           float h = 0.0;
-          h += smoothstep(0.42, 0.0, distance(local, lp1)) * 0.10;
-          h += smoothstep(0.50, 0.0, distance(local, lp2)) * 0.08;
+          h += smoothstep(0.40, 0.0, distance(local, lp1)) * 0.08;
+          h += smoothstep(0.52, 0.0, distance(local, lp2)) * 0.06;
 
           col += h;
         }
@@ -218,15 +260,16 @@ export default function LiquidGlassRenderer() {
         float dmask = udRoundBox(p_px, b_px, u_radius);
         float inShape = 1.0 - smoothstep(-1.0, 1.0, dmask);
 
-        float fresnel = pow(edge, 2.35);
-        col += vec3(1.0) * fresnel * 0.18;
+        float fresnel = pow(edge, 2.15);
+        col += vec3(1.0) * fresnel * 0.15;
 
         float topRim = smoothstep(0.20, 0.0, local.y);
         float bottomRim = smoothstep(0.72, 1.0, local.y);
-        col += vec3(1.0) * topRim * edge * 0.16;
-        col *= 1.0 - bottomRim * edge * 0.12;
 
-        float alpha = inShape * (0.18 + edge * 0.58);
+        col += vec3(1.0) * topRim * edge * 0.14;
+        col *= 1.0 - bottomRim * edge * 0.10;
+
+        float alpha = inShape * (0.20 + edge * 0.54);
 
         return vec4(col, alpha);
       }
