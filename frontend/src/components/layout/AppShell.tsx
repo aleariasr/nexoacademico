@@ -1,5 +1,7 @@
 "use client";
 
+import { logout } from "@/services/auth.service";
+import { LogOut } from "lucide-react";
 import BottomNavigation from "../navigation/BottomNavigation";
 import Sidebar from "../navigation/Sidebar";
 
@@ -15,6 +17,12 @@ const appBackground = `
 `;
 
 export default function AppShell({ children }: AppShellProps) {
+
+  function handleLogout() {
+    logout();
+    window.location.href = "/login";
+  }
+
   return (
     <div
       className="relative min-h-screen overflow-hidden"
@@ -24,6 +32,17 @@ export default function AppShell({ children }: AppShellProps) {
         <Sidebar />
 
         <main className="min-w-0 flex-1 py-8 pl-4 pr-8">
+          <div className="mb-5 flex justify-end">
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="flex h-10 items-center gap-2 rounded-full bg-white/40 px-4 text-sm font-semibold text-slate-700 shadow-sm ring-1 ring-white/50 transition hover:bg-white/60"
+            >
+              <LogOut size={17} />
+              Logout
+            </button>
+          </div>
+
           {children}
         </main>
       </div>

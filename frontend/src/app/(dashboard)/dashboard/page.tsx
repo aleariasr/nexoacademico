@@ -1,6 +1,9 @@
 "use client";
 
 import AppShell from "@/components/layout/AppShell";
+import { getCourses, getDashboard } from "@/services/dashboard.service";
+import type { DashboardResponse } from "@/types/dashboard";
+import type { AcademicTask, Course } from "@/types/academic";
 import {
   Bell,
   BookOpen,
@@ -12,40 +15,11 @@ import {
   Plus,
   TrendingUp,
 } from "lucide-react";
-import { useEffect, useState, type ElementType } from "react";
+import { useCallback, useEffect, useState, type ElementType } from "react";
+import { useRouter } from "next/navigation";
+import { getToken } from "@/services/auth.service";
+import CourseModal from "@/components/courses/CourseModal";
 
-type DashboardResponse = {
-  active_courses: number;
-  pending_tasks: number;
-  in_progress_tasks: number;
-  completed_tasks: number;
-  overdue_tasks: number;
-  completion_rate: number;
-  upcoming_tasks: AcademicTask[];
-};
-
-type Course = {
-  id: number;
-  name: string;
-  code: string;
-  professor: string;
-  credits: number;
-  color: string;
-  status: string;
-};
-
-type AcademicTask = {
-  id: number;
-  title: string;
-  description?: string;
-  due_date: string;
-  priority: "low" | "medium" | "high" | "critical";
-  status: "pending" | "in_progress" | "completed" | "cancelled";
-  progress_percentage: number;
-  course?: number | Course;
-  course_name?: string;
-  task_type_name?: string;
-};
 
 type DashboardState = {
   dashboard: DashboardResponse | null;
@@ -61,76 +35,48 @@ const initialState: DashboardState = {
   error: null,
 };
 
-function getToken() {
-  return (
-    localStorage.getItem("token") ??
-    localStorage.getItem("authToken") ??
-    localStorage.getItem("nexo_token")
-  );
-}
-
-async function apiGet<T>(path: string, token: string): Promise<T> {
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
-
-  if (!baseUrl) {
-    throw new Error("NEXT_PUBLIC_API_URL is not configured.");
-  }
-
-  const response = await fetch(`${baseUrl}${path}`, {
-    headers: {
-      Authorization: `Token ${token}`,
-      "Content-Type": "application/json",
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error(`Request failed: ${response.status}`);
-  }
-
-  return (await response.json()) as T;
-}
-
 export default function DashboardPage() {
   const [state, setState] = useState<DashboardState>(initialState);
+  const router = useRouter();
+  const [courseModalOpen, setCourseModalOpen] = useState(false);
+  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
+
+  const loadDashboard = useCallback(async () => {
+    try {
+      const [dashboard, courses] = await Promise.all([
+        getDashboard(),
+        getCourses(),
+      ]);
+
+      setState({
+        dashboard,
+        courses,
+        loading: false,
+        error: null,
+      });
+    } catch {
+      router.replace("/login");
+    }
+  }, [router]);
 
   useEffect(() => {
-    async function loadDashboard() {
-      const token = getToken();
+    const token = getToken();
 
-      if (!token) {
-        setState({
-          dashboard: null,
-          courses: [],
-          loading: false,
-          error: "No authentication token found.",
-        });
-        return;
-      }
-
-      try {
-        const [dashboard, courses] = await Promise.all([
-          apiGet<DashboardResponse>("/dashboard/", token),
-          apiGet<Course[]>("/courses/", token),
-        ]);
-
-        setState({
-          dashboard,
-          courses,
-          loading: false,
-          error: null,
-        });
-      } catch {
-        setState({
-          dashboard: null,
-          courses: [],
-          loading: false,
-          error: "Could not load dashboard data.",
-        });
-      }
+    if (!token) {
+      router.replace("/login");
+      return;
     }
 
-    loadDashboard();
-  }, []);
+    const timeoutId = window.setTimeout(() => {
+      void loadDashboard();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [router, loadDashboard]);
+
+  if (state.loading) {
+    return null;
+  }
 
   const dashboard = state.dashboard;
 
@@ -183,7 +129,12 @@ export default function DashboardPage() {
               <Bell size={21} strokeWidth={2} />
             </button>
 
-            <button className="flex h-11 items-center gap-2 rounded-full bg-[#007AFF] px-4 text-sm font-semibold text-white shadow-[0_14px_34px_rgba(0,122,255,0.22)] transition hover:brightness-105">
+            <button 
+            onClick={() => {
+              setSelectedCourse(null);
+              setCourseModalOpen(true);
+            }}
+            className="flex h-11 items-center gap-2 rounded-full bg-[#007AFF] px-4 text-sm font-semibold text-white shadow-[0_14px_34px_rgba(0,122,255,0.22)] transition hover:brightness-105">
               <Plus size={18} strokeWidth={2.2} />
               Add
             </button>
@@ -199,7 +150,11 @@ export default function DashboardPage() {
 
         <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {metrics.map((metric) => (
-            <MetricCard key={metric.label} metric={metric} loading={state.loading} />
+            <MetricCard
+              key={metric.label}
+              metric={metric}
+              loading={state.loading}
+            />
           ))}
         </section>
 
@@ -296,6 +251,15 @@ export default function DashboardPage() {
 
                   <p className="mt-4 text-sm font-medium text-slate-600">
                     {course.credits} credits
+                    <button
+                      onClick={() => {
+                        setSelectedCourse(course);
+                        setCourseModalOpen(true);
+                      }}
+                      className="mt-4 rounded-full bg-[#007AFF] px-3 py-2 text-xs font-semibold text-white"
+                    >
+                      Edit
+                    </button>
                   </p>
                 </div>
               ))}
@@ -312,6 +276,15 @@ export default function DashboardPage() {
           )}
         </GlassCard>
       </div>
+      <CourseModal
+        open={courseModalOpen}
+        course={selectedCourse}
+        onClose={() => {
+          setCourseModalOpen(false);
+          setSelectedCourse(null);
+        }}
+        onSaved={loadDashboard}
+      />
     </AppShell>
   );
 }
@@ -326,7 +299,7 @@ function TaskRow({ task }: { task: AcademicTask }) {
       <div className="min-w-0 flex-1">
         <p className="truncate font-semibold text-slate-950">{task.title}</p>
         <p className="mt-1 truncate text-sm text-slate-500">
-          {getCourseLabel(task)}
+          {task.course_name || "No course"}
         </p>
       </div>
 
@@ -335,16 +308,6 @@ function TaskRow({ task }: { task: AcademicTask }) {
       </p>
     </div>
   );
-}
-
-function getCourseLabel(task: AcademicTask) {
-  if (task.course_name) return task.course_name;
-
-  if (typeof task.course === "object" && task.course?.name) {
-    return task.course.name;
-  }
-
-  return "No course";
 }
 
 function formatDate(value: string) {

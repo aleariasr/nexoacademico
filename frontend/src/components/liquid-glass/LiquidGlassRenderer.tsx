@@ -378,7 +378,7 @@ export default function LiquidGlassRenderer() {
       gl.uniform1f(uTime, timeMs / 1000);
 
       gl.uniform1f(uRefraction, 0.026);
-      gl.uniform1f(uBevelDepth, 0.119);
+      gl.uniform1f(uBevelDepth, 0.082);
       gl.uniform1f(uBevelWidth, 0.057);
       gl.uniform1f(uMagnify, 1.0);
       gl.uniform1i(uSpecular, 1);
