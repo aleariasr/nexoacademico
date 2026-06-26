@@ -36,6 +36,9 @@ export default function CourseModal({
   useEffect(() => {
     if (!open) return;
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setError(null);
+
     if (course) {
       setForm({
         name: course.name,
@@ -48,8 +51,6 @@ export default function CourseModal({
     } else {
       setForm(initialForm);
     }
-
-    setError(null);
   }, [open, course]);
 
   if (!open) return null;

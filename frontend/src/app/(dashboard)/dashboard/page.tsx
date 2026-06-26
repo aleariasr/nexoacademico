@@ -19,6 +19,8 @@ import { useCallback, useEffect, useState, type ElementType } from "react";
 import { useRouter } from "next/navigation";
 import { getToken } from "@/services/auth.service";
 import CourseModal from "@/components/courses/CourseModal";
+import CourseCard from "@/components/courses/CourseCard";
+import DeleteCourseDialog from "@/components/courses/DeleteCourseDialog";
 
 
 type DashboardState = {
@@ -40,6 +42,8 @@ export default function DashboardPage() {
   const router = useRouter();
   const [courseModalOpen, setCourseModalOpen] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [courseToDelete, setCourseToDelete] = useState<Course | null>(null);
 
   const loadDashboard = useCallback(async () => {
     try {
@@ -110,6 +114,19 @@ export default function DashboardPage() {
       tone: "blue",
     },
   ];
+
+  const handleDeleteCourse = (course: Course) => {
+    setCourseToDelete(course);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (courseToDelete) {
+      await loadDashboard();
+      setDeleteDialogOpen(false);
+      setCourseToDelete(null);
+    }
+  };
 
   return (
     <AppShell>
@@ -228,40 +245,20 @@ export default function DashboardPage() {
           {state.courses.length ? (
             <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               {state.courses.map((course) => (
-                <div
+                <CourseCard
                   key={course.id}
-                  className="rounded-[24px] bg-white/30 p-4 ring-1 ring-white/45"
-                >
-                  <div
-                    className="mb-5 h-24 rounded-[18px]"
-                    style={{
-                      background:
-                        course.color ||
-                        "linear-gradient(135deg, rgba(0,122,255,.24), rgba(175,82,222,.18))",
-                    }}
-                  />
-
-                  <p className="truncate font-semibold text-slate-950">
-                    {course.code} · {course.name}
-                  </p>
-
-                  <p className="mt-1 truncate text-sm text-slate-500">
-                    {course.professor || "No professor assigned"}
-                  </p>
-
-                  <p className="mt-4 text-sm font-medium text-slate-600">
-                    {course.credits} credits
-                    <button
-                      onClick={() => {
-                        setSelectedCourse(course);
-                        setCourseModalOpen(true);
-                      }}
-                      className="mt-4 rounded-full bg-[#007AFF] px-3 py-2 text-xs font-semibold text-white"
-                    >
-                      Edit
-                    </button>
-                  </p>
-                </div>
+                  course={course}
+                  onEdit={(course) => {
+                    setSelectedCourse(course);
+                    setCourseModalOpen(true);
+                  }}
+                  onDelete={(id) => {
+                    const courseToDelete = state.courses.find(c => c.id === id);
+                    if (courseToDelete) {
+                      handleDeleteCourse(courseToDelete);
+                    }
+                  }}
+                />
               ))}
             </div>
           ) : (
@@ -284,6 +281,16 @@ export default function DashboardPage() {
           setSelectedCourse(null);
         }}
         onSaved={loadDashboard}
+      />
+      <DeleteCourseDialog
+        open={deleteDialogOpen}
+        courseId={courseToDelete?.id ?? null}
+        courseName={courseToDelete?.name ?? ""}
+        onClose={() => {
+          setDeleteDialogOpen(false);
+          setCourseToDelete(null);
+        }}
+        onDeleted={handleConfirmDelete}
       />
     </AppShell>
   );

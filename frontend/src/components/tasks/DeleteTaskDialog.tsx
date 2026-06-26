@@ -1,39 +1,39 @@
 "use client";
 
-import { deleteCourse } from "@/services/academic.service";
+import { deleteTask } from "@/services/academic.service";
 import { AlertTriangle, X } from "lucide-react";
 import { useState } from "react";
 
-type DeleteCourseDialogProps = {
+type DeleteTaskDialogProps = {
   open: boolean;
-  courseId: number | null;
-  courseName: string;
+  taskId: number | null;
+  taskTitle: string;
   onClose: () => void;
   onDeleted: () => void;
 };
 
-export default function DeleteCourseDialog({
+export default function DeleteTaskDialog({
   open,
-  courseId,
-  courseName,
+  taskId,
+  taskTitle,
   onClose,
   onDeleted,
-}: DeleteCourseDialogProps) {
+}: DeleteTaskDialogProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  if (!open || !courseId) return null;
+  if (!open || !taskId) return null;
 
   const handleConfirmDelete = async () => {
     setIsDeleting(true);
     setError(null);
 
     try {
-      await deleteCourse(courseId);
+      await deleteTask(taskId);
       onDeleted();
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to delete course.");
+      setError(err instanceof Error ? err.message : "Failed to delete task.");
       setIsDeleting(false);
     }
   };
@@ -50,10 +50,10 @@ export default function DeleteCourseDialog({
 
             <div>
               <h2 className="text-lg font-semibold text-slate-950">
-                Delete &quot;{courseName}&quot;?
+                Delete &quot;{taskTitle}&quot;?
               </h2>
               <p className="mt-1 text-sm text-slate-500">
-                This action cannot be undone. All associated tasks will remain but will be unlinked from this course.
+                This action cannot be undone. The task will be permanently deleted.
               </p>
             </div>
           </div>
