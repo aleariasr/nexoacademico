@@ -107,8 +107,8 @@
   isolation: isolate;
   overflow: hidden;
   border: 1px solid var(--border-glass);
-  backdrop-filter: blur(32px) saturate(185%) contrast(106%);
-  -webkit-backdrop-filter: blur(32px) saturate(185%) contrast(106%);
+  backdrop-filter: blur(28px) saturate(170%) contrast(104%);
+  -webkit-backdrop-filter: blur(28px) saturate(170%) contrast(104%);
 }
 
 .nexo-surface-panel {
@@ -126,9 +126,9 @@
   background:
     linear-gradient(
       145deg,
-      rgba(255, 255, 255, 0.50),
-      rgba(255, 255, 255, 0.20) 48%,
-      rgba(255, 255, 255, 0.32)
+      rgba(255,255,255,.26),
+      rgba(255,255,255,.08) 48%,
+      rgba(255,255,255,.18)
     );
   box-shadow: var(--shadow-soft);
 }
@@ -149,73 +149,22 @@
   background:
     linear-gradient(
       145deg,
-      rgba(255, 255, 255, 0.64),
-      rgba(255, 255, 255, 0.28) 50%,
-      rgba(255, 255, 255, 0.42)
+      rgba(255,255,255,.34),
+      rgba(255,255,255,.12) 50%,
+      rgba(255,255,255,.22)
     );
   box-shadow:
     0 34px 120px rgba(15, 23, 42, 0.18),
     inset 0 1px 0 rgba(255, 255, 255, 0.82);
 }
 
-.nexo-surface-sidebar::before,
-.nexo-surface-toolbar::before,
-.nexo-surface-input::before,
-.nexo-surface-panel::before,
-.nexo-surface-card::before,
-.nexo-surface-control::before,
-.nexo-surface-floating::before {
-  content: "";
-  position: absolute;
-  inset: -35%;
-  z-index: 0;
-  pointer-events: none;
-  background:
-    radial-gradient(circle at 22% 16%, rgba(255, 255, 255, 0.62), transparent 24%),
-    radial-gradient(circle at 78% 82%, rgba(10, 132, 255, 0.12), transparent 30%),
-    linear-gradient(
-      115deg,
-      transparent 30%,
-      rgba(255, 255, 255, 0.20) 46%,
-      transparent 64%
-    );
-  opacity: 0.72;
-  mix-blend-mode: screen;
-}
-.nexo-surface-sidebar::after,
-.nexo-surface-toolbar::after,
-.nexo-surface-input::after,
-.nexo-surface-panel::after,
-.nexo-surface-card::after,
-.nexo-surface-control::after,
-.nexo-surface-floating::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  border-radius: inherit;
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.14),
-    inset 0 22px 38px rgba(255, 255, 255, 0.15),
-    inset 0 -24px 44px rgba(15, 23, 42, 0.035);
-}
-
-.nexo-surface-panel > *,
-.nexo-surface-card > *,
-.nexo-surface-control > *,
-.nexo-surface-floating > * {
-  position: relative;
-  z-index: 1;
-}
-
 .nexo-surface-sidebar {
   background:
     linear-gradient(
       145deg,
-      rgba(255, 255, 255, 0.48),
-      rgba(255, 255, 255, 0.16) 52%,
-      rgba(255, 255, 255, 0.28)
+      rgba(255,255,255,.28),
+      rgba(255,255,255,.09) 52%,
+      rgba(255,255,255,.18)
     );
   box-shadow:
     0 38px 120px rgba(15, 23, 42, 0.13),
@@ -247,4 +196,59 @@
     0 10px 26px rgba(15, 23, 42, 0.045),
     inset 0 1px 0 rgba(255, 255, 255, 0.78),
     inset 0 -12px 20px rgba(255, 255, 255, 0.11);
+}
+
+.nexo-surface-sidebar::before,
+.nexo-surface-toolbar::before,
+.nexo-surface-input::before,
+.nexo-surface-panel::before,
+.nexo-surface-card::before,
+.nexo-surface-control::before,
+.nexo-surface-floating::before {
+  content: "";
+  position: absolute;
+  inset: -35%;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 22% 16%, rgba(255, 255, 255, 0.62), transparent 24%),
+    radial-gradient(circle at 78% 82%, rgba(10, 132, 255, 0.12), transparent 30%),
+    linear-gradient(
+      115deg,
+      transparent 30%,
+      rgba(255, 255, 255, 0.20) 46%,
+      transparent 64%
+    );
+  opacity: 0.72;
+  mix-blend-mode: screen;
+}
+
+.nexo-surface-sidebar::after,
+.nexo-surface-toolbar::after,
+.nexo-surface-input::after,
+.nexo-surface-panel::after,
+.nexo-surface-card::after,
+.nexo-surface-control::after,
+.nexo-surface-floating::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.14),
+    inset 0 22px 38px rgba(255, 255, 255, 0.15),
+    inset 0 -24px 44px rgba(15, 23, 42, 0.035);
+}
+
+.nexo-surface-sidebar > *,
+.nexo-surface-toolbar > *,
+.nexo-surface-input > *,
+.nexo-surface-panel > *,
+.nexo-surface-card > *,
+.nexo-surface-control > *,
+.nexo-surface-floating > * {
+  position: relative;
+  z-index: 1;
 }

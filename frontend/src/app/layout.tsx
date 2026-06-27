@@ -32,7 +32,9 @@ export default function RootLayout({
     >
       <body className="min-h-full">
         <AppBackground />
-        {children}
+        <div className="relative z-10 min-h-screen">
+          {children}
+        </div>
       </body>
     </html>
   );
