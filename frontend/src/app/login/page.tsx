@@ -44,7 +44,7 @@ export default function LoginPage() {
           className="absolute inset-0"
           style={{
             background:
-              "radial-gradient(circle at 45% 52%, rgba(255,255,255,0.10), transparent 34%), linear-gradient(135deg, rgb(5,5,7), rgb(14,8,14))",
+              "radial-gradient(circle at 24% 22%, rgba(96,165,250,0.18), transparent 22%), radial-gradient(circle at 78% 18%, rgba(56,189,248,0.16), transparent 18%), radial-gradient(circle at 52% 58%, rgba(255,255,255,0.12), transparent 36%), linear-gradient(135deg, rgb(3,11,26), rgb(8,15,31) 55%, rgb(10,20,38))",
           }}
         />
 
@@ -52,11 +52,11 @@ export default function LoginPage() {
           aria-hidden="true"
           className="absolute h-[980px] w-[980px] rounded-full"
           style={{
-            left: "-240px",
-            top: "-260px",
+            left: "-280px",
+            top: "-300px",
             background:
-              "radial-gradient(circle, rgba(255,42,120,0.82) 0%, rgba(255,42,120,0.52) 32%, transparent 68%)",
-            animation: "login-hot-blob-one 18s ease-in-out infinite",
+              "radial-gradient(circle, rgba(56,189,248,0.78) 0%, rgba(56,189,248,0.34) 30%, transparent 68%)",
+            animation: "login-cool-blob-one 20s ease-in-out infinite",
           }}
         />
 
@@ -64,11 +64,11 @@ export default function LoginPage() {
           aria-hidden="true"
           className="absolute h-[1040px] w-[1040px] rounded-full"
           style={{
-            right: "-300px",
-            top: "-240px",
+            right: "-320px",
+            top: "-260px",
             background:
-              "radial-gradient(circle, rgba(255,88,150,0.72) 0%, rgba(255,88,150,0.46) 34%, transparent 70%)",
-            animation: "login-hot-blob-two 22s ease-in-out infinite",
+              "radial-gradient(circle, rgba(59,130,246,0.68) 0%, rgba(59,130,246,0.30) 34%, transparent 70%)",
+            animation: "login-cool-blob-two 24s ease-in-out infinite",
           }}
         />
 
@@ -76,11 +76,11 @@ export default function LoginPage() {
           aria-hidden="true"
           className="absolute h-[900px] w-[900px] rounded-full"
           style={{
-            left: "18%",
-            bottom: "-390px",
+            left: "14%",
+            bottom: "-420px",
             background:
-              "radial-gradient(circle, rgba(130,48,255,0.58) 0%, rgba(130,48,255,0.34) 34%, transparent 70%)",
-            animation: "login-hot-blob-three 20s ease-in-out infinite",
+              "radial-gradient(circle, rgba(125,211,252,0.50) 0%, rgba(125,211,252,0.22) 34%, transparent 70%)",
+            animation: "login-cool-blob-three 22s ease-in-out infinite",
           }}
         />
 
@@ -88,11 +88,11 @@ export default function LoginPage() {
           aria-hidden="true"
           className="absolute h-[760px] w-[760px] rounded-full"
           style={{
-            right: "20%",
-            bottom: "-260px",
+            right: "16%",
+            bottom: "-280px",
             background:
-              "radial-gradient(circle, rgba(255,245,235,0.38) 0%, rgba(255,245,235,0.22) 32%, transparent 68%)",
-            animation: "login-hot-blob-four 15s ease-in-out infinite",
+              "radial-gradient(circle, rgba(255,255,255,0.28) 0%, rgba(255,255,255,0.10) 32%, transparent 68%)",
+            animation: "login-cool-blob-four 17s ease-in-out infinite",
           }}
         />
 
@@ -108,84 +108,50 @@ export default function LoginPage() {
 
       <LiquidGlassRenderer />
 
-      <section className="relative z-10 w-full max-w-[900px]">
-        <AppleLiquidGlass className="h-[430px] w-full" radius={42}>
-          <form onSubmit={handleSubmit} className="relative z-10 p-10">
-            <div
-              className="flex flex-col justify-center"
-              style={{ textShadow: "0 4px 26px rgba(0,0,0,0.65)" }}
-            >
-              <p
-                className="text-sm font-semibold"
-                style={{ color: "rgba(255,255,255,0.9)" }}
-              >
+      <section className="relative z-10 w-full max-w-[760px]">
+        <AppleLiquidGlass className="min-h-[640px] w-full" radius={42}>
+          <form onSubmit={handleSubmit} className="relative z-10 flex h-full flex-col justify-between p-8 md:p-10">
+            <div className="space-y-6 text-white" style={{ textShadow: "0 4px 24px rgba(0,0,0,0.28)" }}>
+              <span className="inline-flex w-fit items-center rounded-full border border-white/14 bg-white/8 px-4 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-slate-200/90">
                 NexoAcadémico
-              </p>
+              </span>
 
-              <h1
-                className="mt-4 text-6xl font-semibold tracking-[-0.06em]"
-                style={{ color: "rgb(255,255,255)" }}
-              >
-                Sign in
-              </h1>
-
-              <p
-                className="mt-5 max-w-[330px] text-sm leading-6"
-                style={{ color: "rgba(255,255,255,0.82)" }}
-              >
-                Access your academic workspace and manage courses, tasks and
-                progress from one place.
-              </p>
             </div>
 
-            <div className="mt-8">
-              <div className="space-y-4">
-                <FieldLabel label="Username">
-                  <InputShell>
-                    <UserRound
-                      size={18}
-                      style={{ color: "rgba(255,255,255,0.78)" }}
-                    />
+            <div className="mt-8 space-y-4">
+              <FieldLabel label="Username">
+                <InputShell>
+                  <UserRound size={18} className="text-slate-300/80" />
 
-                    <input
-                      value={username}
-                      onChange={(event) => setUsername(event.target.value)}
-                      className="h-full min-w-0 flex-1 bg-transparent outline-none"
-                      style={{ color: "rgb(255,255,255)" }}
-                      autoComplete="username"
-                      required
-                    />
-                  </InputShell>
-                </FieldLabel>
+                  <input
+                    value={username}
+                    onChange={(event) => setUsername(event.target.value)}
+                    className="h-full min-w-0 flex-1 bg-transparent text-white outline-none placeholder:text-slate-300/45"
+                    autoComplete="username"
+                    placeholder="yourname"
+                    required
+                  />
+                </InputShell>
+              </FieldLabel>
 
-                <FieldLabel label="Password">
-                  <InputShell>
-                    <LockKeyhole
-                      size={18}
-                      style={{ color: "rgba(255,255,255,0.78)" }}
-                    />
+              <FieldLabel label="Password">
+                <InputShell>
+                  <LockKeyhole size={18} className="text-slate-300/80" />
 
-                    <input
-                      value={password}
-                      onChange={(event) => setPassword(event.target.value)}
-                      type="password"
-                      className="h-full min-w-0 flex-1 bg-transparent outline-none"
-                      style={{ color: "rgb(255,255,255)" }}
-                      autoComplete="current-password"
-                      required
-                    />
-                  </InputShell>
-                </FieldLabel>
-              </div>
+                  <input
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
+                    type="password"
+                    className="h-full min-w-0 flex-1 bg-transparent text-white outline-none placeholder:text-slate-300/45"
+                    autoComplete="current-password"
+                    placeholder="••••••••"
+                    required
+                  />
+                </InputShell>
+              </FieldLabel>
 
               {status === "error" && (
-                <p
-                  className="mt-4 rounded-[16px] px-4 py-3 text-sm font-medium"
-                  style={{
-                    background: "rgba(239,68,68,0.28)",
-                    color: "rgb(255,255,255)",
-                  }}
-                >
+                <p className="rounded-[18px] border border-rose-400/20 bg-rose-400/12 px-4 py-3 text-sm font-medium text-rose-50">
                   Could not sign in. Check your credentials or backend endpoint.
                 </p>
               )}
@@ -193,11 +159,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={status === "loading"}
-                className="mt-6 flex h-13 w-full items-center justify-center gap-2 rounded-[19px] text-sm font-semibold shadow-[0_28px_90px_rgba(0,0,0,0.22)] transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60"
-                style={{
-                  background: "rgba(255,255,255,0.94)",
-                  color: "rgb(15,23,42)",
-                }}
+                className="mt-2 flex h-13 w-full items-center justify-center gap-2 rounded-[20px] border border-white/15 bg-white/92 text-sm font-semibold text-slate-950 shadow-[0_24px_80px_rgba(2,8,23,0.24)] transition hover:-translate-y-[1px] hover:bg-white disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {status === "loading" ? "Signing in..." : "Sign in"}
                 <ArrowRight size={18} strokeWidth={2.2} />
@@ -237,12 +199,10 @@ function FieldLabel({
 function InputShell({ children }: { children: React.ReactNode }) {
   return (
     <div
-      className="mt-2 flex h-13 items-center gap-3 rounded-[19px] px-4 transition"
+      className="mt-2 flex h-13 items-center gap-3 rounded-[20px] border border-white/14 bg-white/8 px-4 transition"
       style={{
-        border: "1px solid rgba(255,255,255,0.20)",
-        background: "rgba(0,0,0,0.34)",
         backdropFilter: "blur(18px)",
-        boxShadow: "inset 0 1px 0 rgba(255,255,255,0.14)",
+        boxShadow: "inset 0 1px 0 rgba(255,255,255,0.08)",
       }}
     >
       {children}

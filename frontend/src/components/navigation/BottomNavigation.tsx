@@ -46,6 +46,7 @@ export default function BottomNavigation() {
           return (
             <Link key={link.href} href={link.href}>
               <motion.div
+                whileHover={{ y: -1 }}
                 whileTap={{ scale: 0.94 }}
                 transition={{
                   type: "spring",

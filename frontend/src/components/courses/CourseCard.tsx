@@ -1,6 +1,9 @@
 "use client";
 
+import Button from "@/components/ui/Button";
+import GlassCard from "@/components/ui/GlassCard";
 import type { Course } from "@/types/academic";
+import { motion } from "framer-motion";
 import { Edit2, Trash2 } from "lucide-react";
 import { useState } from "react";
 
@@ -10,15 +13,12 @@ type CourseCardProps = {
   onDelete: (id: number) => void;
 };
 
-export default function CourseCard({
-  course,
-  onEdit,
-  onDelete,
-}: CourseCardProps) {
+export default function CourseCard({ course, onEdit, onDelete }: CourseCardProps) {
   const [isDeleting, setIsDeleting] = useState(false);
 
   const handleDelete = async () => {
     setIsDeleting(true);
+
     try {
       onDelete(course.id);
     } finally {
@@ -27,51 +27,59 @@ export default function CourseCard({
   };
 
   return (
-    <div className="group rounded-[24px] border border-white/45 bg-white/30 p-4 shadow-sm transition-all duration-300 hover:border-white/60 hover:bg-white/40 hover:shadow-[0_20px_50px_rgba(15,23,42,0.1)]">
-      {/* Color banner */}
-      <div
-        className="mb-5 h-24 rounded-[18px] transition-transform duration-300 group-hover:scale-105"
-        style={{
-          background:
-            course.color ||
-            "linear-gradient(135deg, rgba(0,122,255,.24), rgba(175,82,222,.18))",
-        }}
-      />
-
-      {/* Course info */}
-      <div className="mb-4">
-        <p className="truncate font-semibold text-slate-950">
-          {course.code} · {course.name}
-        </p>
-
-        <p className="mt-1 truncate text-sm text-slate-500">
-          {course.professor || "No professor assigned"}
-        </p>
-
-        <p className="mt-2 text-sm font-medium text-slate-600">
-          {course.credits} credits
-        </p>
-      </div>
-
-      {/* Actions */}
-      <div className="flex gap-2">
-        <button
-          onClick={() => onEdit(course)}
-          className="flex-1 flex items-center justify-center gap-2 rounded-full bg-[#007AFF] px-3 py-2 text-xs font-semibold text-white transition-all duration-200 hover:brightness-110 active:scale-95"
+    <motion.article
+      whileHover={{ y: -4, scale: 1.01 }}
+      whileTap={{ scale: 0.99 }}
+      transition={{ type: "spring", stiffness: 360, damping: 30 }}
+    >
+      <GlassCard className="group p-4">
+        <div
+          className="relative mb-5 h-24 overflow-hidden rounded-[var(--radius-md)]"
+          style={{
+            background:
+              course.color ||
+              "linear-gradient(135deg, rgba(10,132,255,.28), rgba(175,82,222,.18))",
+          }}
         >
-          <Edit2 size={14} />
-          Edit
-        </button>
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_22%_12%,rgba(255,255,255,0.58),transparent_32%),linear-gradient(135deg,rgba(255,255,255,0.24),transparent_54%)]" />
+          <div className="absolute inset-x-4 top-0 h-px bg-white/70" />
+        </div>
 
-        <button
-          onClick={handleDelete}
-          disabled={isDeleting}
-          className="flex-1 flex items-center justify-center gap-2 rounded-full bg-red-500/20 px-3 py-2 text-xs font-semibold text-red-600 transition-all duration-200 hover:bg-red-500/30 active:scale-95 disabled:opacity-60"
-        >
-          <Trash2 size={14} />
-          {isDeleting ? "Deleting..." : "Delete"}
-        </button>
-      </div>
-    </div>
+        <div className="mb-5 min-w-0">
+          <p className="truncate text-base font-semibold tracking-[-0.015em] text-slate-950">
+            {course.code} · {course.name}
+          </p>
+
+          <p className="mt-1 truncate text-sm text-slate-500">
+            {course.professor || "No professor assigned"}
+          </p>
+
+          <p className="mt-3 inline-flex rounded-full bg-white/38 px-3 py-1 text-xs font-semibold text-slate-600 ring-1 ring-white/45">
+            {course.credits} credits
+          </p>
+        </div>
+
+        <div className="flex gap-2 border-t border-white/30 pt-4">
+          <Button
+            variant="primary"
+            className="h-9 flex-1 px-3 text-xs"
+            onClick={() => onEdit(course)}
+          >
+            <Edit2 size={14} />
+            Edit
+          </Button>
+
+          <Button
+            variant="glass"
+            className="h-9 flex-1 px-3 text-xs text-red-600 hover:bg-red-500/15"
+            onClick={handleDelete}
+            disabled={isDeleting}
+          >
+            <Trash2 size={14} />
+            {isDeleting ? "Deleting..." : "Delete"}
+          </Button>
+        </div>
+      </GlassCard>
+    </motion.article>
   );
 }

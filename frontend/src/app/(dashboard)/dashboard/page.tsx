@@ -1,7 +1,7 @@
 "use client";
 
-import AppShell from "@/components/layout/AppShell";
-import { getCourses, getDashboard } from "@/services/dashboard.service";
+import { getCourses } from "@/services/academic.service";
+import { getDashboard } from "@/services/dashboard.service";
 import type { DashboardResponse } from "@/types/dashboard";
 import type { AcademicTask, Course } from "@/types/academic";
 import {
@@ -11,16 +11,24 @@ import {
   CheckSquare,
   ChevronLeft,
   ChevronRight,
-  Inbox,
   Plus,
   TrendingUp,
 } from "lucide-react";
-import { useCallback, useEffect, useState, type ElementType } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getToken } from "@/services/auth.service";
 import CourseModal from "@/components/courses/CourseModal";
 import CourseCard from "@/components/courses/CourseCard";
 import DeleteCourseDialog from "@/components/courses/DeleteCourseDialog";
+import { motion } from "framer-motion";
+import Button from "@/components/ui/Button";
+import EmptyState from "@/components/ui/EmptyState";
+import GlassCard from "@/components/ui/GlassCard";
+import LoadingState from "@/components/ui/LoadingState";
+import PageHeader from "@/components/ui/PageHeader";
+import IconButton from "@/components/ui/IconButton";
+import SectionHeader from "@/components/ui/SectionHeader";
+import StatCard from "@/components/ui/StatCard";
 
 
 type DashboardState = {
@@ -44,6 +52,7 @@ export default function DashboardPage() {
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [courseToDelete, setCourseToDelete] = useState<Course | null>(null);
+  const [calendarOffset, setCalendarOffset] = useState(0);
 
   const loadDashboard = useCallback(async () => {
     try {
@@ -79,7 +88,7 @@ export default function DashboardPage() {
   }, [router, loadDashboard]);
 
   if (state.loading) {
-    return null;
+    return <LoadingState label="Loading dashboard" />;
   }
 
   const dashboard = state.dashboard;
@@ -129,53 +138,82 @@ export default function DashboardPage() {
   };
 
   return (
-    <AppShell>
-      <div className="flex w-full flex-col gap-6 pb-24 md:pb-0">
-        <header className="flex items-center justify-between gap-6">
-          <div>
-            <p className="text-base font-medium text-slate-500">
-              Academic workspace
-            </p>
-            <h1 className="mt-1 text-3xl font-semibold tracking-[-0.035em] text-slate-950 md:text-[42px]">
-              Dashboard
-            </h1>
-          </div>
-
+    <motion.div
+      className="flex w-full flex-col gap-6 pb-24 md:pb-0"
+      initial="hidden"
+      animate="show"
+      variants={{
+        hidden: {},
+        show: {
+          transition: {
+            staggerChildren: 0.08,
+            delayChildren: 0.05,
+          },
+        },
+      }}
+    >
+      <MotionCard>
+        <PageHeader title="Dashboard">
           <div className="hidden items-center gap-3 md:flex">
-            <button className="relative flex h-11 w-11 items-center justify-center rounded-full bg-white/38 text-slate-800 shadow-sm ring-1 ring-white/50 transition hover:bg-white/60">
+            <Button
+              variant="glass"
+              size="icon"
+              aria-label="Open notifications"
+              onClick={() => router.push("/tasks")}
+            >
               <Bell size={21} strokeWidth={2} />
-            </button>
+            </Button>
 
-            <button 
-            onClick={() => {
-              setSelectedCourse(null);
-              setCourseModalOpen(true);
-            }}
-            className="flex h-11 items-center gap-2 rounded-full bg-[#007AFF] px-4 text-sm font-semibold text-white shadow-[0_14px_34px_rgba(0,122,255,0.22)] transition hover:brightness-105">
+            <Button
+              variant="primary"
+              onClick={() => {
+                setSelectedCourse(null);
+                setCourseModalOpen(true);
+              }}
+            >
               <Plus size={18} strokeWidth={2.2} />
               Add
-            </button>
+            </Button>
           </div>
-        </header>
+        </PageHeader>
+      </MotionCard>
 
-        {state.error && (
+      {state.error && (
+        <MotionCard>
           <GlassCard className="p-5">
             <p className="font-semibold text-slate-950">Backend not connected</p>
             <p className="mt-1 text-sm text-slate-500">{state.error}</p>
           </GlassCard>
-        )}
+        </MotionCard>
+      )}
 
-        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <motion.section
+        className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"
+        variants={{
+          hidden: {},
+          show: { transition: { staggerChildren: 0.07 } },
+        }}
+      >
           {metrics.map((metric) => (
-            <MetricCard
+            <StatCard
               key={metric.label}
-              metric={metric}
-              loading={state.loading}
+              label={metric.label}
+              value={metric.value}
+              detail={metric.detail}
+              icon={metric.icon}
+              tone={metric.tone as "blue" | "green" | "purple"}
             />
           ))}
-        </section>
+      </motion.section>
 
-        <section className="grid gap-5 lg:grid-cols-[minmax(0,1.2fr)_390px]">
+      <motion.section
+        className="grid gap-5 lg:grid-cols-[minmax(0,1.2fr)_390px]"
+        variants={{
+          hidden: {},
+          show: { transition: { staggerChildren: 0.08 } },
+        }}
+      >
+        <MotionCard>
           <GlassCard className="min-h-[330px] p-6">
             <SectionHeader title="Upcoming tasks" />
 
@@ -196,7 +234,9 @@ export default function DashboardPage() {
               />
             )}
           </GlassCard>
+        </MotionCard>
 
+        <MotionCard delay={0.08}>
           <GlassCard className="p-6">
             <div className="mb-5 flex items-center justify-between">
               <div>
@@ -207,14 +247,28 @@ export default function DashboardPage() {
               </div>
 
               <div className="flex gap-2">
-                <IconButton>
+                <IconButton
+                  aria-label="Previous calendar period"
+                  onClick={() => setCalendarOffset((value) => value - 1)}
+                >
                   <ChevronLeft size={19} />
                 </IconButton>
-                <IconButton>
+                <IconButton
+                  aria-label="Next calendar period"
+                  onClick={() => setCalendarOffset((value) => value + 1)}
+                >
                   <ChevronRight size={19} />
                 </IconButton>
               </div>
             </div>
+
+            <p className="mb-4 text-sm text-slate-500">
+              {calendarOffset === 0
+                ? "Showing the next deadlines"
+                : calendarOffset > 0
+                  ? `Shifted ${calendarOffset} period${calendarOffset === 1 ? "" : "s"} forward`
+                  : `Shifted ${Math.abs(calendarOffset)} period${Math.abs(calendarOffset) === 1 ? "" : "s"} back`}
+            </p>
 
             {dashboard?.upcoming_tasks.length ? (
               <div className="space-y-3">
@@ -237,8 +291,10 @@ export default function DashboardPage() {
               />
             )}
           </GlassCard>
-        </section>
+        </MotionCard>
+      </motion.section>
 
+      <MotionCard delay={0.14}>
         <GlassCard className="p-6">
           <SectionHeader title="Courses" />
 
@@ -272,7 +328,7 @@ export default function DashboardPage() {
             />
           )}
         </GlassCard>
-      </div>
+      </MotionCard>
       <CourseModal
         open={courseModalOpen}
         course={selectedCourse}
@@ -292,14 +348,38 @@ export default function DashboardPage() {
         }}
         onDeleted={handleConfirmDelete}
       />
-    </AppShell>
+    </motion.div>
+  );
+}
+
+function MotionCard({
+  children,
+  delay = 0,
+}: {
+  children: React.ReactNode;
+  delay?: number;
+}) {
+  return (
+    <motion.div
+      variants={{
+        hidden: { opacity: 0, y: 14, scale: 0.992 },
+        show: {
+          opacity: 1,
+          y: 0,
+          scale: 1,
+          transition: { duration: 0.46, ease: [0.22, 1, 0.36, 1], delay },
+        },
+      }}
+    >
+      {children}
+    </motion.div>
   );
 }
 
 function TaskRow({ task }: { task: AcademicTask }) {
   return (
     <div className="flex items-center gap-4 py-4 first:pt-0 last:pb-0">
-      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[16px] bg-[#007AFF]/10 text-[#007AFF]">
+      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[16px] bg-[var(--primary)]/10 text-[var(--primary)]">
         <CheckSquare size={22} strokeWidth={2.1} />
       </div>
 
@@ -328,111 +408,4 @@ function formatDate(value: string) {
     month: "short",
     day: "numeric",
   }).format(date);
-}
-
-function MetricCard({
-  metric,
-  loading,
-}: {
-  metric: {
-    label: string;
-    value: string;
-    detail: string;
-    icon: ElementType;
-    tone: string;
-  };
-  loading: boolean;
-}) {
-  const Icon = metric.icon;
-
-  return (
-    <GlassCard className="min-h-[128px] p-5">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-sm font-medium text-slate-500">{metric.label}</p>
-          <p className="mt-2 text-[34px] font-semibold leading-none tracking-tight text-slate-950">
-            {loading ? "…" : metric.value}
-          </p>
-          <p className="mt-2 text-sm text-slate-500">{metric.detail}</p>
-        </div>
-
-        <div
-          className={`
-            flex h-11 w-11 shrink-0 items-center justify-center rounded-[15px]
-            ${
-              metric.tone === "green"
-                ? "bg-emerald-400/12 text-emerald-600"
-                : metric.tone === "purple"
-                  ? "bg-purple-400/12 text-purple-600"
-                  : "bg-[#007AFF]/12 text-[#007AFF]"
-            }
-          `}
-        >
-          <Icon size={22} strokeWidth={2.1} />
-        </div>
-      </div>
-    </GlassCard>
-  );
-}
-
-function SectionHeader({ title }: { title: string }) {
-  return (
-    <h2 className="text-xl font-semibold tracking-tight text-slate-950">
-      {title}
-    </h2>
-  );
-}
-
-function EmptyState({
-  title,
-  description,
-}: {
-  title: string;
-  description: string;
-}) {
-  return (
-    <div className="mt-5 flex min-h-[190px] flex-col items-center justify-center rounded-[24px] border border-dashed border-slate-400/30 bg-white/18 px-6 text-center">
-      <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-white/35 text-slate-500 shadow-sm">
-        <Inbox size={22} strokeWidth={2} />
-      </div>
-
-      <p className="font-semibold text-slate-950">{title}</p>
-      <p className="mt-2 max-w-sm text-sm leading-6 text-slate-500">
-        {description}
-      </p>
-    </div>
-  );
-}
-
-function GlassCard({
-  children,
-  className = "",
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <div
-      className={`
-        rounded-[28px]
-        border
-        border-white/45
-        bg-white/28
-        shadow-[0_16px_48px_rgba(15,23,42,0.055)]
-        backdrop-blur-[24px]
-        backdrop-saturate-[160%]
-        ${className}
-      `}
-    >
-      {children}
-    </div>
-  );
-}
-
-function IconButton({ children }: { children: React.ReactNode }) {
-  return (
-    <button className="flex h-9 w-9 items-center justify-center rounded-full bg-white/35 text-slate-700 shadow-sm ring-1 ring-white/45 transition hover:bg-white/55">
-      {children}
-    </button>
-  );
 }

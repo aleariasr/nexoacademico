@@ -1,9 +1,12 @@
 "use client";
 
 import { logout } from "@/services/auth.service";
+import AnimatedAppShell from "@/components/animations/AnimatedAppShell";
 import { LogOut } from "lucide-react";
+import { useRouter } from "next/navigation";
 import BottomNavigation from "../navigation/BottomNavigation";
 import Sidebar from "../navigation/Sidebar";
+import Button from "@/components/ui/Button";
 
 type AppShellProps = {
   children: React.ReactNode;
@@ -17,10 +20,11 @@ const appBackground = `
 `;
 
 export default function AppShell({ children }: AppShellProps) {
+  const router = useRouter();
 
   function handleLogout() {
     logout();
-    window.location.href = "/login";
+    router.replace("/login");
   }
 
   return (
@@ -31,19 +35,15 @@ export default function AppShell({ children }: AppShellProps) {
       <div className="relative z-10 flex min-h-screen">
         <Sidebar />
 
-        <main className="min-w-0 flex-1 py-8 pl-4 pr-8">
+        <main className="min-w-0 flex-1 px-5 py-6 md:px-8 md:py-8">
           <div className="mb-5 flex justify-end">
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="flex h-10 items-center gap-2 rounded-full bg-white/40 px-4 text-sm font-semibold text-slate-700 shadow-sm ring-1 ring-white/50 transition hover:bg-white/60"
-            >
+            <Button variant="glass" onClick={handleLogout}>
               <LogOut size={17} />
               Logout
-            </button>
+            </Button>
           </div>
 
-          {children}
+          <AnimatedAppShell>{children}</AnimatedAppShell>
         </main>
       </div>
 

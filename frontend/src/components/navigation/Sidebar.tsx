@@ -1,6 +1,5 @@
 "use client";
 
-import LiquidGlassPanel from "@/components/effects/LiquidGlassPanel";
 import { motion } from "framer-motion";
 import {
   BarChart3,
@@ -13,7 +12,7 @@ import {
   UserRound,
 } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 
 const mainLinks = [
@@ -23,7 +22,7 @@ const mainLinks = [
   { href: "/statistics", label: "Statistics", icon: BarChart3 },
 ];
 
-const sidebarSpring = {
+const spring = {
   type: "spring" as const,
   stiffness: 360,
   damping: 36,
@@ -36,89 +35,57 @@ const itemSpring = {
   damping: 36,
 };
 
-const activeSpring = {
-  type: "spring" as const,
-  stiffness: 260,
-  damping: 28,
-};
-
 export default function Sidebar() {
   const pathname = usePathname();
-  const [expanded, setExpanded] = useState(false);
+  const router = useRouter();
+
+  const [expanded, setExpanded] = useState(() => {
+
+  if (typeof window === "undefined") return false;
+    return window.sessionStorage.getItem("sidebar-expanded") === "true";
+  });
 
   return (
     <aside className="hidden shrink-0 p-5 md:block">
       <motion.div
         initial={false}
         animate={{ width: expanded ? 278 : 82 }}
-        transition={sidebarSpring}
+        transition={spring}
         className="sticky top-5 h-[calc(100dvh-40px)]"
       >
-        <div
-          className="sidebar-liquid-snapshot relative isolate h-full overflow-hidden rounded-[36px]"
-          style={{
-            background:
-              "radial-gradient(circle at 8% 10%, rgba(0,122,255,0.38), transparent 360px), radial-gradient(circle at 0% 70%, rgba(175,82,222,0.22), transparent 420px), linear-gradient(135deg, rgb(246,250,255), rgb(236,242,249))",
-          }}
-        >
-          <LiquidGlassPanel enabled={false} snapshot=".sidebar-liquid-snapshot" />
+        <div className="relative isolate h-full overflow-hidden rounded-[36px] border border-white/60 bg-white/35 shadow-[0_30px_90px_rgba(15,23,42,0.14)] backdrop-blur-2xl">
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_10%,rgba(10,132,255,0.28),transparent_320px),radial-gradient(circle_at_0%_70%,rgba(175,82,222,0.18),transparent_380px),linear-gradient(135deg,rgba(255,255,255,0.62),rgba(235,243,255,0.38))]" />
+          <div className="pointer-events-none absolute inset-0 rounded-[36px] shadow-[inset_0_1px_0_rgba(255,255,255,0.85),inset_0_-30px_60px_rgba(255,255,255,0.22)]" />
 
-          <div
-            className="pointer-events-none absolute inset-0 z-[10] rounded-[36px]"
-            style={{ border: "1px solid rgba(255,255,255,0.15)" }}
-          />
-
-          <div
-            data-liquid-ignore
-            className="relative z-[9999] flex h-full flex-col p-3 pt-[76px]"
-          >
+          <div className="relative z-10 flex h-full flex-col p-3 pt-[76px]">
             <motion.button
               type="button"
               aria-label="Toggle sidebar"
-              onPointerDown={(event) => {
-                event.preventDefault();
-                event.stopPropagation();
-                setExpanded((value) => !value);
-              }}
+              onClick={() => setExpanded((value) => !value)}
               whileHover={{ scale: 1.045 }}
               whileTap={{ scale: 0.94 }}
               transition={itemSpring}
-              className="
-                absolute left-3 top-3 z-[9999]
-                flex h-12 w-12 items-center justify-center
-                rounded-[20px]
-                bg-white/10 text-slate-950 shadow-sm backdrop-blur-sm
-                transition-colors hover:bg-white/18
-              "
+              className="absolute left-3 top-3 flex h-12 w-12 items-center justify-center rounded-[20px] border border-white/55 bg-white/45 text-slate-950 shadow-sm backdrop-blur-xl transition-colors hover:bg-white/65"
             >
-              {expanded ? (
-                <ChevronLeft size={20} strokeWidth={2.2} />
-              ) : (
-                <ChevronRight size={20} strokeWidth={2.2} />
-              )}
+              {expanded ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
             </motion.button>
 
             <nav className="flex flex-col gap-2">
               {mainLinks.map((link) => {
-                const active = pathname === link.href;
                 const Icon = link.icon;
+                const active = pathname === link.href;
 
                 return (
                   <Link key={link.href} href={link.href} aria-label={link.label}>
-                    <SidebarItem
-                      active={active}
-                      expanded={expanded}
-                      icon={Icon}
-                      label={link.label}
-                    />
+                    <SidebarItem active={active} expanded={expanded} icon={Icon} label={link.label} />
                   </Link>
                 );
               })}
             </nav>
 
             <div className="mt-auto flex flex-col gap-2 pb-2">
-              <RailAction expanded={expanded} icon={UserRound} label="Profile" />
-              <RailAction expanded={expanded} icon={Settings} label="Settings" />
+              <RailAction expanded={expanded} icon={UserRound} label="Profile" onClick={() => router.push("/profile")} />
+              <RailAction expanded={expanded} icon={Settings} label="Settings" onClick={() => router.push("/settings")} />
             </div>
           </div>
         </div>
@@ -140,32 +107,22 @@ function SidebarItem({
 }) {
   return (
     <motion.div
-      whileHover={{ scale: 1.018, x: expanded ? 2 : 0 }}
+      whileHover={{ scale: 1.02, x: expanded ? 2 : 0 }}
       whileTap={{ scale: 0.965 }}
       transition={itemSpring}
-      className="
-        relative flex h-12 items-center gap-3
-        rounded-[20px] px-[15px]
-        text-slate-900 transition-colors hover:text-black
-      "
+      className="relative flex h-12 items-center gap-3 rounded-[20px] px-[15px] text-slate-900 transition-colors hover:text-black"
     >
-      {active && (
+      {active ? (
         <motion.div
           layoutId="sidebar-selection"
-          className="absolute inset-0 rounded-[20px] bg-white/14 shadow-sm backdrop-blur-sm"
-          transition={activeSpring}
+          className="absolute inset-0 rounded-[20px] border border-white/65 bg-white/55 shadow-sm backdrop-blur-xl"
+          transition={spring}
         />
+      ) : (
+        <div className="absolute inset-0 rounded-[20px] transition-colors duration-300 hover:bg-white/35" />
       )}
 
-      {!active && (
-        <div className="absolute inset-0 rounded-[20px] bg-white/0 transition-colors hover:bg-white/8" />
-      )}
-
-      <Icon
-        size={21}
-        strokeWidth={2.1}
-        className={`relative z-10 shrink-0 ${active ? "text-[#007AFF]" : ""}`}
-      />
+      <Icon size={21} strokeWidth={2.1} className={`relative z-10 shrink-0 ${active ? "text-[#0A84FF]" : ""}`} />
 
       <motion.span
         initial={false}
@@ -187,25 +144,23 @@ function RailAction({
   icon: Icon,
   label,
   expanded,
+  onClick,
 }: {
   icon: React.ElementType;
   label: string;
   expanded: boolean;
+  onClick: () => void;
 }) {
   return (
     <motion.button
       type="button"
-      whileHover={{ scale: 1.018, x: expanded ? 2 : 0 }}
+      onClick={onClick}
+      whileHover={{ scale: 1.02, x: expanded ? 2 : 0 }}
       whileTap={{ scale: 0.965 }}
       transition={itemSpring}
-      className="
-        relative flex h-12 items-center gap-3 rounded-[20px]
-        px-[15px] text-slate-900 transition-colors hover:text-black
-      "
+      className="relative flex h-12 items-center gap-3 rounded-[20px] px-[15px] text-left text-slate-900 transition-colors hover:bg-white/35"
     >
-      <div className="absolute inset-0 rounded-[20px] bg-white/0 transition-colors hover:bg-white/8" />
-
-      <Icon size={20} strokeWidth={2.1} className="relative z-10 shrink-0" />
+      <Icon size={21} strokeWidth={2.1} className="relative z-10 shrink-0" />
 
       <motion.span
         initial={false}

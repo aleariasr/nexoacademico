@@ -1,48 +1,40 @@
-"use client";
+import type { ButtonHTMLAttributes } from "react";
 
-import { motion, type HTMLMotionProps } from "framer-motion";
+type ButtonVariant = "primary" | "glass" | "ghost";
+type ButtonSize = "sm" | "md" | "icon";
 
-type ButtonProps = HTMLMotionProps<"button"> & {
-  variant?: "primary" | "secondary";
+type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
+  variant?: ButtonVariant;
+  size?: ButtonSize;
+};
+
+const base =
+  "nexo-pressable inline-flex items-center justify-center gap-2 font-semibold outline-none disabled:pointer-events-none disabled:opacity-45";
+
+const variants = {
+  primary: "nexo-primary text-white",
+  glass: "nexo-control text-slate-800",
+  ghost: "text-slate-700 hover:bg-white/35",
+};
+
+const sizes = {
+  sm: "h-9 rounded-full px-3 text-sm",
+  md: "h-11 rounded-full px-4 text-sm",
+  icon: "h-11 w-11 rounded-full",
 };
 
 export default function Button({
-  variant = "primary",
   className = "",
-  children,
+  variant = "glass",
+  size = "md",
+  type = "button",
   ...props
 }: ButtonProps) {
-  const styles =
-    variant === "primary"
-      ? "bg-[#0A84FF] text-white shadow-[0_12px_30px_rgba(10,132,255,0.28)]"
-      : "glass text-black";
-
   return (
-    <motion.button
-      whileHover={{
-        y: -2,
-        scale: 1.01,
-      }}
-      whileTap={{
-        scale: 0.97,
-      }}
-      transition={{
-        type: "spring",
-        stiffness: 420,
-        damping: 30,
-      }}
-      className={`
-        rounded-full
-        px-6
-        py-3
-        font-medium
-        transition-colors
-        ${styles}
-        ${className}
-      `}
+    <button
+      type={type}
+      className={`${base} ${variants[variant]} ${sizes[size]} ${className}`}
       {...props}
-    >
-      {children}
-    </motion.button>
+    />
   );
 }

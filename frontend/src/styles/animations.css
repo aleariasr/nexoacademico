@@ -1,0 +1,29 @@
+@media (prefers-reduced-motion: no-preference) {
+  .nexo-pressable {
+    transition:
+      transform 180ms var(--ease-premium),
+      background-color 180ms var(--ease-premium),
+      box-shadow 180ms var(--ease-premium),
+      opacity 180ms var(--ease-premium);
+  }
+
+  .nexo-pressable:hover {
+    transform: translateY(-1px);
+  }
+
+  .nexo-pressable:active {
+    transform: scale(0.97);
+  }
+}
+
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
