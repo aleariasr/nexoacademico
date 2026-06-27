@@ -1,11 +1,20 @@
-import type { ButtonHTMLAttributes } from "react";
+"use client";
+
+import { motion } from "framer-motion";
+
+import type { MotionButtonProps } from "@/types/ui";
+
+import { MotionHover } from "@/lib/motion/hover";
+import { MotionPress } from "@/lib/motion/press";
+import { MotionTransitions } from "@/lib/motion/transitions";
 
 type ButtonVariant = "primary" | "glass" | "ghost";
 type ButtonSize = "sm" | "md" | "icon";
 
-type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
+type ButtonProps = MotionButtonProps & {
   variant?: ButtonVariant;
   size?: ButtonSize;
+  motion?: boolean;
 };
 
 const base =
@@ -28,11 +37,15 @@ export default function Button({
   variant = "glass",
   size = "md",
   type = "button",
+  motion: motionEnabled = true,
   ...props
 }: ButtonProps) {
   return (
-    <button
+    <motion.button
       type={type}
+      whileHover={motionEnabled ? MotionHover.button : MotionHover.none}
+      whileTap={motionEnabled ? MotionPress.button : MotionPress.none}
+      transition={MotionTransitions.hover}
       className={`${base} ${variants[variant]} ${sizes[size]} ${className}`}
       {...props}
     />

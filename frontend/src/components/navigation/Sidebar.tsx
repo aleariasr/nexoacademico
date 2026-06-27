@@ -15,6 +15,9 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { MotionHover } from "@/lib/motion/hover";
+import { MotionPress } from "@/lib/motion/press";
+
 const mainLinks = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/courses", label: "Courses", icon: BookOpen },
@@ -62,8 +65,8 @@ export default function Sidebar() {
               type="button"
               aria-label="Toggle sidebar"
               onClick={() => setExpanded((value) => !value)}
-              whileHover={{ scale: 1.045 }}
-              whileTap={{ scale: 0.94 }}
+              whileHover={MotionHover.button}
+              whileTap={MotionPress.icon}
               transition={itemSpring}
               className="absolute left-3 top-3 flex h-12 w-12 items-center justify-center rounded-[20px] border border-white/55 bg-white/45 text-slate-950 shadow-sm backdrop-blur-xl transition-colors hover:bg-white/65"
             >
@@ -107,8 +110,12 @@ function SidebarItem({
 }) {
   return (
     <motion.div
-      whileHover={{ scale: 1.02, x: expanded ? 2 : 0 }}
-      whileTap={{ scale: 0.965 }}
+      whileHover={
+        expanded
+          ? MotionHover.sidebar
+          : MotionHover.button
+      }
+      whileTap={MotionPress.sidebar}
       transition={itemSpring}
       className="relative flex h-12 items-center gap-3 rounded-[20px] px-[15px] text-slate-900 transition-colors hover:text-black"
     >
@@ -155,8 +162,13 @@ function RailAction({
     <motion.button
       type="button"
       onClick={onClick}
-      whileHover={{ scale: 1.02, x: expanded ? 2 : 0 }}
-      whileTap={{ scale: 0.965 }}
+      whileHover={
+        expanded
+          ? MotionHover.sidebar
+          : MotionHover.button
+      }
+
+      whileTap={MotionPress.sidebar}
       transition={itemSpring}
       className="relative flex h-12 items-center gap-3 rounded-[20px] px-[15px] text-left text-slate-900 transition-colors hover:bg-white/35"
     >

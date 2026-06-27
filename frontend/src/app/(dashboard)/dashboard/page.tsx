@@ -20,7 +20,6 @@ import { getToken } from "@/services/auth.service";
 import CourseModal from "@/components/courses/CourseModal";
 import CourseCard from "@/components/courses/CourseCard";
 import DeleteCourseDialog from "@/components/courses/DeleteCourseDialog";
-import { motion } from "framer-motion";
 import Button from "@/components/ui/Button";
 import EmptyState from "@/components/ui/EmptyState";
 import GlassCard from "@/components/ui/GlassCard";
@@ -29,6 +28,11 @@ import PageHeader from "@/components/ui/PageHeader";
 import IconButton from "@/components/ui/IconButton";
 import SectionHeader from "@/components/ui/SectionHeader";
 import StatCard from "@/components/ui/StatCard";
+import {
+  MotionCard,
+  MotionPage,
+  MotionSection,
+} from "@/components/motion";
 
 
 type DashboardState = {
@@ -138,20 +142,7 @@ export default function DashboardPage() {
   };
 
   return (
-    <motion.div
-      className="flex w-full flex-col gap-6 pb-24 md:pb-0"
-      initial="hidden"
-      animate="show"
-      variants={{
-        hidden: {},
-        show: {
-          transition: {
-            staggerChildren: 0.08,
-            delayChildren: 0.05,
-          },
-        },
-      }}
-    >
+    <MotionPage className="flex w-full flex-col gap-6 pb-24 md:pb-0">
       <MotionCard>
         <PageHeader title="Dashboard">
           <div className="hidden items-center gap-3 md:flex">
@@ -187,31 +178,23 @@ export default function DashboardPage() {
         </MotionCard>
       )}
 
-      <motion.section
+      <MotionSection
         className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"
-        variants={{
-          hidden: {},
-          show: { transition: { staggerChildren: 0.07 } },
-        }}
       >
-          {metrics.map((metric) => (
-            <StatCard
-              key={metric.label}
-              label={metric.label}
-              value={metric.value}
-              detail={metric.detail}
-              icon={metric.icon}
-              tone={metric.tone as "blue" | "green" | "purple"}
-            />
-          ))}
-      </motion.section>
+        {metrics.map((metric) => (
+          <StatCard
+            key={metric.label}
+            label={metric.label}
+            value={metric.value}
+            detail={metric.detail}
+            icon={metric.icon}
+            tone={metric.tone as "blue" | "green" | "purple"}
+          />
+        ))}
+      </MotionSection>
 
-      <motion.section
+      <MotionSection
         className="grid gap-5 lg:grid-cols-[minmax(0,1.2fr)_390px]"
-        variants={{
-          hidden: {},
-          show: { transition: { staggerChildren: 0.08 } },
-        }}
       >
         <MotionCard>
           <GlassCard className="min-h-[330px] p-6">
@@ -292,7 +275,7 @@ export default function DashboardPage() {
             )}
           </GlassCard>
         </MotionCard>
-      </motion.section>
+      </MotionSection>
 
       <MotionCard delay={0.14}>
         <GlassCard className="p-6">
@@ -348,31 +331,7 @@ export default function DashboardPage() {
         }}
         onDeleted={handleConfirmDelete}
       />
-    </motion.div>
-  );
-}
-
-function MotionCard({
-  children,
-  delay = 0,
-}: {
-  children: React.ReactNode;
-  delay?: number;
-}) {
-  return (
-    <motion.div
-      variants={{
-        hidden: { opacity: 0, y: 14, scale: 0.992 },
-        show: {
-          opacity: 1,
-          y: 0,
-          scale: 1,
-          transition: { duration: 0.46, ease: [0.22, 1, 0.36, 1], delay },
-        },
-      }}
-    >
-      {children}
-    </motion.div>
+    </MotionPage>
   );
 }
 

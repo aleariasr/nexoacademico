@@ -1,7 +1,8 @@
-import Button from "@/components/ui/Button";
-import type { ButtonHTMLAttributes } from "react";
+import type { MotionButtonProps } from "@/types/ui";
 
-type IconButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
+import Button from "@/components/ui/Button";
+
+type IconButtonProps = MotionButtonProps & {
   children: React.ReactNode;
 };
 

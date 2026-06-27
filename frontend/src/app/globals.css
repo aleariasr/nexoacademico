@@ -26,36 +26,7 @@ body {
   margin: 0;
   color: var(--foreground);
   overflow-x: hidden;
-  background:
-    radial-gradient(circle at 7% 14%, rgba(56, 189, 248, 0.16), transparent 460px),
-    radial-gradient(circle at 30% 38%, rgba(59, 130, 246, 0.12), transparent 420px),
-    radial-gradient(circle at 82% 6%, rgba(255, 255, 255, 0.9), transparent 600px),
-    linear-gradient(135deg, #e9f3ff 0%, #f8fbff 48%, #edf4ff 100%);
-}
-
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  background:
-    linear-gradient(
-      135deg,
-      rgba(255, 255, 255, 0.66) 0%,
-      rgba(255, 255, 255, 0.28) 34%,
-      transparent 35%
-    );
-  opacity: 0.82;
-}
-
-body::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  background-image: radial-gradient(rgba(255, 255, 255, 0.55) 1px, transparent 1px);
-  background-size: 4px 4px;
-  opacity: 0.06;
+  background: var(--background);
 }
 
 button,
@@ -85,71 +56,4 @@ canvas {
 .liquidGL,
 .liquidGL canvas {
   z-index: 0 !important;
-}
-
-.liquid-login-noise {
-  background-image:
-    radial-gradient(rgba(255, 255, 255, 0.42) 0.7px, transparent 0.7px),
-    radial-gradient(rgba(15, 23, 42, 0.18) 0.6px, transparent 0.6px);
-  background-position:
-    0 0,
-    2px 2px;
-  background-size: 4px 4px;
-}
-
-@keyframes login-cool-blob-one {
-  0% {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-  33% {
-    transform: translate3d(320px, 180px, 0) scale(1.14);
-  }
-  66% {
-    transform: translate3d(90px, 470px, 0) scale(0.98);
-  }
-  100% {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-}
-
-@keyframes login-cool-blob-two {
-  0% {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-  35% {
-    transform: translate3d(-380px, 220px, 0) scale(1.1);
-  }
-  70% {
-    transform: translate3d(-90px, 520px, 0) scale(1);
-  }
-  100% {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-}
-
-@keyframes login-cool-blob-three {
-  0% {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-  40% {
-    transform: translate3d(180px, -380px, 0) scale(1.12);
-  }
-  75% {
-    transform: translate3d(-140px, -150px, 0) scale(0.98);
-  }
-  100% {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-}
-
-@keyframes login-cool-blob-four {
-  0% {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-  50% {
-    transform: translate3d(-280px, -320px, 0) scale(1.16);
-  }
-  100% {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
 }

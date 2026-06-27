@@ -1,5 +1,13 @@
-type SurfaceVariant = "panel" | "card" | "control" | "floating";
-type SurfaceRadius = "md" | "lg" | "xl" | "2xl" | "liquid";
+type SurfaceVariant =
+  | "panel"
+  | "card"
+  | "control"
+  | "floating"
+  | "sidebar"
+  | "toolbar"
+  | "input";
+
+type SurfaceRadius = "md" | "lg" | "xl" | "2xl" | "liquid" | "full";
 
 type SurfaceProps = {
   children: React.ReactNode;
@@ -13,6 +21,9 @@ const variants: Record<SurfaceVariant, string> = {
   card: "nexo-surface-card",
   control: "nexo-surface-control",
   floating: "nexo-surface-floating",
+  sidebar: "nexo-surface-sidebar",
+  toolbar: "nexo-surface-toolbar",
+  input: "nexo-surface-input",
 };
 
 const radii: Record<SurfaceRadius, string> = {
@@ -21,6 +32,7 @@ const radii: Record<SurfaceRadius, string> = {
   xl: "rounded-[var(--radius-xl)]",
   "2xl": "rounded-[var(--radius-2xl)]",
   liquid: "rounded-[var(--radius-liquid)]",
+  full: "rounded-full",
 };
 
 export default function Surface({
