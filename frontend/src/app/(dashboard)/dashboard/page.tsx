@@ -143,7 +143,7 @@ export default function DashboardPage() {
 
   return (
     <MotionPage className="flex w-full flex-col gap-6 pb-24 md:pb-0">
-      <MotionCard>
+      <MotionCard hover={false} tap={false}>
         <PageHeader title="Dashboard">
           <div className="hidden items-center gap-3 md:flex">
             <Button
