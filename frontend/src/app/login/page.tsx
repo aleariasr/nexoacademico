@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Check, LockKeyhole, UserRound } from "lucide-react";
+import { ArrowRight, LockKeyhole, UserRound } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -8,7 +8,6 @@ import Button from "@/components/ui/Button";
 import GlassCard from "@/components/ui/GlassCard";
 import Surface from "@/components/ui/Surface";
 import { login, saveAuthSession } from "@/services/auth.service";
-import { MotionDots } from "@/components/motion";
 import { motion } from "framer-motion";
 
 type LoginStatus = "idle" | "loading" | "leaving" | "error";
@@ -21,6 +20,9 @@ export default function LoginPage() {
   const [status, setStatus] = useState<LoginStatus>("idle");
 
   const isBusy = status === "loading" || status === "leaving";
+
+  const buttonState =
+    status === "loading" ? "loading" : status === "leaving" ? "success" : "idle";
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -112,25 +114,12 @@ export default function LoginPage() {
             <Button
               type="submit"
               variant="primary"
+              state={buttonState}
               className="h-12 w-full"
               disabled={isBusy}
             >
-              {status === "leaving" ? (
-                <>
-                  Opening
-                  <Check size={18} strokeWidth={2.2} />
-                </>
-              ) : status === "loading" ? (
-                <>
-                  Signing in
-                  <MotionDots />
-                </>
-              ) : (
-                <>
-                  Continue
-                  <ArrowRight size={18} strokeWidth={2.2} />
-                </>
-              )}
+              Continue
+              <ArrowRight size={18} strokeWidth={2.2} />
             </Button>
           </motion.form>
         </GlassCard>
