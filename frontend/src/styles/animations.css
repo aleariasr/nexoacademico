@@ -1,18 +1,18 @@
 @media (prefers-reduced-motion: no-preference) {
   .nexo-pressable {
     transition:
-      transform 180ms var(--ease-premium),
       background-color 180ms var(--ease-premium),
       box-shadow 180ms var(--ease-premium),
-      opacity 180ms var(--ease-premium);
+      opacity 180ms var(--ease-premium),
+      filter 180ms var(--ease-premium);
   }
 
   .nexo-pressable:hover {
-    transform: translateY(-1px);
+    filter: saturate(1.04) brightness(1.01);
   }
 
   .nexo-pressable:active {
-    transform: scale(0.97);
+    filter: saturate(1.08) brightness(0.99);
   }
 }
 

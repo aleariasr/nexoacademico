@@ -26,4 +26,17 @@ export const MotionTransitions = {
     duration: MotionTiming.instant,
     ease: MotionEasing.standard,
   },
+
+  press: {
+    type: "spring",
+    stiffness: 520,
+    damping: 34,
+    mass: 0.72,
+  },
+
+  pulse: {
+    duration: 0.9,
+    ease: MotionEasing.standard,
+    repeat: Infinity,
+  },
 } as const;

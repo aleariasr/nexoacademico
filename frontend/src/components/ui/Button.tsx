@@ -45,7 +45,7 @@ export default function Button({
       type={type}
       whileHover={motionEnabled ? MotionHover.button : MotionHover.none}
       whileTap={motionEnabled ? MotionPress.button : MotionPress.none}
-      transition={MotionTransitions.hover}
+      transition={MotionTransitions.press}
       className={`${base} ${variants[variant]} ${sizes[size]} ${className}`}
       {...props}
     />

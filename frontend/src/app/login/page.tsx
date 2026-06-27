@@ -1,20 +1,26 @@
 "use client";
 
-import { ArrowRight, LockKeyhole, UserRound } from "lucide-react";
+import { ArrowRight, Check, LockKeyhole, UserRound } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-import GlassCard from "@/components/ui/GlassCard";
-import { login, saveAuthSession } from "@/services/auth.service";
-import Surface from "@/components/ui/Surface";
 import Button from "@/components/ui/Button";
+import GlassCard from "@/components/ui/GlassCard";
+import Surface from "@/components/ui/Surface";
+import { login, saveAuthSession } from "@/services/auth.service";
+import { MotionDots } from "@/components/motion";
+import { motion } from "framer-motion";
+
+type LoginStatus = "idle" | "loading" | "leaving" | "error";
 
 export default function LoginPage() {
   const router = useRouter();
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
+  const [status, setStatus] = useState<LoginStatus>("idle");
+
+  const isBusy = status === "loading" || status === "leaving";
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -23,7 +29,11 @@ export default function LoginPage() {
     try {
       const data = await login(username, password);
       saveAuthSession(data);
-      router.push("/dashboard");
+      setStatus("leaving");
+
+      window.setTimeout(() => {
+        router.push("/dashboard");
+      }, 260);
     } catch {
       setStatus("error");
     }
@@ -33,7 +43,21 @@ export default function LoginPage() {
     <main className="relative flex min-h-screen items-center justify-center px-6 py-10">
       <section className="relative z-10 w-full max-w-[420px]">
         <GlassCard radius="liquid" variant="floating" className="p-8 md:p-9">
-          <form onSubmit={handleSubmit} className="space-y-7">
+          <motion.form
+            onSubmit={handleSubmit}
+            animate={{
+              opacity: status === "leaving" ? 0.82 : 1,
+              scale: status === "leaving" ? 0.985 : 1,
+              filter: status === "leaving" ? "blur(0.2px)" : "blur(0px)",
+            }}
+            transition={{
+              type: "spring",
+              stiffness: 420,
+              damping: 34,
+              mass: 0.8,
+            }}
+            className="space-y-7"
+          >
             <header className="space-y-2 text-center">
               <p className="text-sm font-semibold tracking-[0.22em] text-slate-500">
                 NEXOACADÉMICO
@@ -44,7 +68,11 @@ export default function LoginPage() {
               </h1>
             </header>
 
-            <div className="space-y-4">
+            <div
+              className={`space-y-4 transition duration-300 ${
+                isBusy ? "opacity-70" : "opacity-100"
+              }`}
+            >
               <Field label="Username">
                 <UserRound size={18} className="text-slate-500" />
 
@@ -54,7 +82,7 @@ export default function LoginPage() {
                   className="h-full min-w-0 flex-1 bg-transparent text-slate-950 outline-none placeholder:text-slate-400"
                   autoComplete="username"
                   placeholder="Username"
-                  disabled={status === "loading"}
+                  disabled={isBusy}
                   required
                 />
               </Field>
@@ -69,7 +97,7 @@ export default function LoginPage() {
                   className="h-full min-w-0 flex-1 bg-transparent text-slate-950 outline-none placeholder:text-slate-400"
                   autoComplete="current-password"
                   placeholder="Password"
-                  disabled={status === "loading"}
+                  disabled={isBusy}
                   required
                 />
               </Field>
@@ -85,12 +113,26 @@ export default function LoginPage() {
               type="submit"
               variant="primary"
               className="h-12 w-full"
-              disabled={status === "loading"}
+              disabled={isBusy}
             >
-              {status === "loading" ? "Signing in" : "Continue"}
-              <ArrowRight size={18} strokeWidth={2.2} />
+              {status === "leaving" ? (
+                <>
+                  Opening
+                  <Check size={18} strokeWidth={2.2} />
+                </>
+              ) : status === "loading" ? (
+                <>
+                  Signing in
+                  <MotionDots />
+                </>
+              ) : (
+                <>
+                  Continue
+                  <ArrowRight size={18} strokeWidth={2.2} />
+                </>
+              )}
             </Button>
-          </form>
+          </motion.form>
         </GlassCard>
       </section>
     </main>
