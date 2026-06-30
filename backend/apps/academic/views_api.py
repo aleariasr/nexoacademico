@@ -1,3 +1,4 @@
+from django.db import connection
 from django.db.models import Avg, Sum
 from django.utils import timezone
 from rest_framework import viewsets
@@ -108,15 +109,22 @@ class AcademicTaskViewSet(viewsets.ModelViewSet):
         )
 
     def perform_destroy(self, instance):
-        instance.is_deleted = True
-        instance.deleted_at = timezone.now()
-        instance.save(update_fields=["is_deleted", "deleted_at", "updated_at"])
+        with connection.cursor() as cursor:
+            cursor.callproc(
+                "sp_soft_delete_task",
+                [
+                    instance.id,
+                    self.request.user.id,
+                ],
+            )
+
+        instance.refresh_from_db()
 
         TaskHistory.objects.create(
             academic_task=instance,
             user=self.request.user,
             action="deleted",
-            description=f'Task "{instance.title}" was soft deleted.',
+            description=f'Task "{instance.title}" was soft deleted using stored procedure sp_soft_delete_task.',
         )
 
     @action(detail=True, methods=["get"], url_path="history")
@@ -132,25 +140,23 @@ class DashboardAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        active_courses = Course.objects.filter(
-            user=request.user,
-            status=Course.STATUS_ACTIVE,
-        ).count()
+        with connection.cursor() as cursor:
+            cursor.callproc(
+                "sp_get_user_dashboard",
+                [request.user.id],
+            )
+            row = cursor.fetchone()
+
+        active_courses = row[0] if row else 0
+        pending_tasks = row[1] if row else 0
+        in_progress_tasks = row[2] if row else 0
+        completed_tasks = row[3] if row else 0
+        overdue_tasks = row[4] if row else 0
 
         tasks = (
             AcademicTask.objects
             .filter(user=request.user, is_deleted=False)
             .select_related("course", "task_type")
-        )
-
-        pending_tasks = tasks.filter(status=AcademicTask.STATUS_PENDING).count()
-        in_progress_tasks = tasks.filter(status=AcademicTask.STATUS_IN_PROGRESS).count()
-        completed_tasks = tasks.filter(status=AcademicTask.STATUS_COMPLETED).count()
-
-        overdue_tasks = (
-            tasks.filter(due_date__lt=timezone.now())
-            .exclude(status=AcademicTask.STATUS_COMPLETED)
-            .count()
         )
 
         total_tasks = tasks.count()
