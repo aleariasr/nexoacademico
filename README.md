@@ -36,7 +36,7 @@ Plataforma web full stack para la gestión de cursos, actividades académicas, e
 
 | Actividades | Entregas |
 |---|---|
-| ![Actividades](docs/assets/screenshots/tasks.png) | ![Entregas](docs/assets/screenshots/submissions.png) |
+| ![Actividades](docs/assets/screenshots/tasks.png) | ![Entregas](docs/assets/screenshots/submissions-review.png) |
 
 Consulta la [guía de capturas](docs/SCREENSHOTS.md) para producir todas las imágenes con dimensiones, datos y nombres consistentes.
 
