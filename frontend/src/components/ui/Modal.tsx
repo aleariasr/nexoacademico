@@ -6,7 +6,7 @@ import Surface from "@/components/ui/Surface";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useId } from "react";
 import { createPortal } from "react-dom";
 
 type ModalProps = {
@@ -41,7 +41,13 @@ export default function Modal({
   const isDesktop = useMediaQuery("(min-width: 768px)");
   const { contentOffset } = useSidebar();
 
+  const titleId = useId();
+  const descriptionId = useId();
+
+  const desktopInset = 20;
   const leftOffset = isDesktop ? contentOffset : 0;
+  const verticalInset = isDesktop ? desktopInset : 0;
+  const rightInset = isDesktop ? desktopInset : 0;
 
   useEffect(() => {
     if (!open) return;
@@ -78,10 +84,16 @@ export default function Modal({
             initial={{
               opacity: 0,
               left: leftOffset,
+              top: verticalInset,
+              right: rightInset,
+              bottom: verticalInset,
             }}
             animate={{
               opacity: 1,
               left: leftOffset,
+              top: verticalInset,
+              right: rightInset,
+              bottom: verticalInset,
             }}
             exit={{
               opacity: 0,
@@ -92,23 +104,59 @@ export default function Modal({
               },
               left: modalSpring,
             }}
-            className="pointer-events-auto fixed inset-y-0 right-0 cursor-default bg-white/48 backdrop-blur-[36px] backdrop-saturate-150"
-          />
+            className="
+              pointer-events-auto
+              fixed
+              cursor-default
+              overflow-hidden
+              rounded-none
+              border
+              border-white/50
+              bg-white/32
+              shadow-[0_24px_80px_rgba(15,23,42,0.10)]
+              backdrop-blur-[30px]
+              backdrop-saturate-150
+              md:rounded-[32px]
+            "
+          >
+            <span
+              aria-hidden="true"
+              className="
+                pointer-events-none
+                absolute
+                inset-0
+                bg-[radial-gradient(circle_at_15%_0%,rgba(255,255,255,0.42),transparent_38%),radial-gradient(circle_at_90%_100%,rgba(10,132,255,0.08),transparent_35%)]
+              "
+            />
+          </motion.button>
 
           <motion.div
             initial={false}
             animate={{
               left: leftOffset,
+              top: verticalInset,
+              right: rightInset,
+              bottom: verticalInset,
             }}
             transition={modalSpring}
-            className="pointer-events-none fixed inset-y-0 right-0 flex items-center justify-center overflow-y-auto px-4 py-6"
+            className="
+              pointer-events-none
+              fixed
+              flex
+              items-center
+              justify-center
+              overflow-y-auto
+              px-4
+              py-6
+              sm:px-6
+            "
           >
             <motion.div
               role="dialog"
               aria-modal="true"
-              aria-labelledby="modal-title"
+              aria-labelledby={titleId}
               aria-describedby={
-                description ? "modal-description" : undefined
+                description ? descriptionId : undefined
               }
               initial={{
                 opacity: 0,
@@ -131,34 +179,101 @@ export default function Modal({
                 damping: 38,
                 mass: 0.8,
               }}
-              className={`pointer-events-auto relative z-10 w-full ${sizes[size]}`}
+              className={`
+                pointer-events-auto
+                relative
+                z-10
+                w-full
+                ${sizes[size]}
+              `}
             >
               <Surface
                 variant="floating"
-                radius="liquid"
-                className="relative max-h-[calc(100dvh-3rem)] overflow-hidden border border-white/75 bg-white/30 shadow-[0_32px_100px_rgba(37,99,235,0.20)] backdrop-blur-[34px]"
+                radius="2xl"
+                className="
+                  relative
+                  max-h-[calc(100dvh-5rem)]
+                  overflow-hidden
+                  border
+                  border-white/65
+                  bg-white/40
+                  shadow-[0_28px_90px_rgba(15,23,42,0.16)]
+                  backdrop-blur-[34px]
+                "
               >
-                <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-white/95" />
+                <div
+                  aria-hidden="true"
+                  className="
+                    pointer-events-none
+                    absolute
+                    inset-x-8
+                    top-0
+                    h-px
+                    bg-white/90
+                  "
+                />
 
-                <div className="pointer-events-none absolute inset-0 rounded-[var(--radius-liquid)] bg-[radial-gradient(circle_at_18%_0%,rgba(255,255,255,0.78),transparent_36%),radial-gradient(circle_at_80%_100%,rgba(10,132,255,0.16),transparent_34%)]" />
+                <div
+                  aria-hidden="true"
+                  className="
+                    pointer-events-none
+                    absolute
+                    inset-0
+                    rounded-[inherit]
+                    bg-[radial-gradient(circle_at_18%_0%,rgba(255,255,255,0.68),transparent_36%),radial-gradient(circle_at_82%_100%,rgba(10,132,255,0.12),transparent_34%)]
+                  "
+                />
 
-                <header className="relative z-10 flex items-start justify-between gap-4 border-b border-white/45 px-6 py-5">
+                <header
+                  className="
+                    relative
+                    z-10
+                    flex
+                    items-start
+                    justify-between
+                    gap-4
+                    border-b
+                    border-white/40
+                    px-6
+                    py-5
+                  "
+                >
                   <div className="min-w-0">
-                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#0A84FF]">
+                    <p
+                      className="
+                        text-xs
+                        font-semibold
+                        uppercase
+                        tracking-[0.24em]
+                        text-[#0A84FF]
+                      "
+                    >
                       NexoAcadémico
                     </p>
 
                     <h2
-                      id="modal-title"
-                      className="mt-1 text-2xl font-semibold tracking-[-0.03em] text-slate-950"
+                      id={titleId}
+                      className="
+                        mt-1
+                        text-2xl
+                        font-semibold
+                        tracking-[-0.03em]
+                        text-slate-950
+                      "
                     >
                       {title}
                     </h2>
 
                     {description && (
                       <p
-                        id="modal-description"
-                        className="mt-1 max-w-xl text-sm leading-6 text-slate-500"
+                        id={descriptionId}
+                        className="
+                          mt-1
+                          max-w-xl
+                          text-sm
+                          leading-6
+                          text-slate-500
+                        "
                       >
                         {description}
                       </p>
@@ -170,13 +285,22 @@ export default function Modal({
                     size="icon"
                     onClick={onClose}
                     aria-label="Cerrar modal"
-                    className="shrink-0 bg-white/45"
+                    className="shrink-0 bg-white/40"
                   >
                     <X size={19} />
                   </Button>
                 </header>
 
-                <div className="relative z-10 max-h-[calc(100dvh-10rem)] overflow-y-auto px-6 py-5">
+                <div
+                  className="
+                    relative
+                    z-10
+                    max-h-[calc(100dvh-12rem)]
+                    overflow-y-auto
+                    px-6
+                    py-5
+                  "
+                >
                   {children}
                 </div>
               </Surface>
