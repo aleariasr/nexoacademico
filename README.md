@@ -119,7 +119,7 @@ Más detalle en [Arquitectura](docs/architecture.md).
 ### 1. Clonar el repositorio
 
 ```bash
-git clone <URL_DEL_REPOSITORIO>
+git clone https://github.com/aleariasr/nexoacademico.git
 cd nexoacademico
 ```
 
