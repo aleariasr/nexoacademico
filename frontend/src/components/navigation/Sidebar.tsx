@@ -1,5 +1,10 @@
 "use client";
 
+import { useSidebar } from "@/components/layout/SidebarContext";
+import Surface from "@/components/ui/Surface";
+import { MotionHover } from "@/lib/motion/hover";
+import { MotionPress } from "@/lib/motion/press";
+import { getStoredUser, type User } from "@/services/auth.service";
 import { motion } from "framer-motion";
 import {
   BookOpen,
@@ -12,17 +17,25 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { getStoredUser, type User } from "@/services/auth.service";
 import { useEffect, useMemo, useState } from "react";
 
-import Surface from "@/components/ui/Surface";
-import { MotionHover } from "@/lib/motion/hover";
-import { MotionPress } from "@/lib/motion/press";
-
 const mainLinks = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/users", label: "Users", icon: Users, adminOnly: true },
-  { href: "/courses", label: "Courses", icon: BookOpen },
+  {
+    href: "/dashboard",
+    label: "Dashboard",
+    icon: LayoutDashboard,
+  },
+  {
+    href: "/users",
+    label: "Users",
+    icon: Users,
+    adminOnly: true,
+  },
+  {
+    href: "/courses",
+    label: "Courses",
+    icon: BookOpen,
+  },
 ];
 
 const spring = {
@@ -41,12 +54,10 @@ const itemSpring = {
 export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
 
-  const [expanded, setExpanded] = useState(() => {
-    if (typeof window === "undefined") return false;
-    return window.sessionStorage.getItem("sidebar-expanded") === "true";
-  });
+  const { expanded, toggleSidebar } = useSidebar();
+
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
@@ -62,36 +73,33 @@ export default function Sidebar() {
         return user?.role === "admin";
       }
 
-      if ("hiddenForAdmin" in link && link.hiddenForAdmin) {
-        return user?.role !== "admin";
-      }
-
       return true;
     });
   }, [user]);
 
-  function toggleSidebar() {
-    setExpanded((value) => {
-      const nextValue = !value;
-      window.sessionStorage.setItem("sidebar-expanded", String(nextValue));
-      return nextValue;
-    });
-  }
-
   return (
-    <aside className="fixed left-0 top-0 z-40 hidden h-screen w-[112px] shrink-0 p-5 md:block">
+    <aside className="pointer-events-none fixed inset-y-0 left-0 z-40 hidden w-[330px] p-5 md:block">
       <motion.div
         initial={false}
-        animate={{ width: expanded ? 278 : 82 }}
+        animate={{
+          width: expanded ? 278 : 82,
+        }}
         transition={spring}
-        className="h-full"
+        className="pointer-events-auto h-full"
       >
-        <Surface variant="sidebar" radius="2xl" className="h-full">
+        <Surface
+          variant="sidebar"
+          radius="2xl"
+          className="h-full overflow-hidden"
+        >
           <div className="flex h-full flex-col p-3">
             <div className="mb-5 flex h-12 items-center gap-3">
               <motion.button
                 type="button"
-                aria-label="Toggle sidebar"
+                aria-label={
+                  expanded ? "Contraer sidebar" : "Expandir sidebar"
+                }
+                aria-expanded={expanded}
                 onClick={toggleSidebar}
                 whileHover={MotionHover.button}
                 whileTap={MotionPress.icon}
@@ -109,10 +117,13 @@ export default function Sidebar() {
                 initial={false}
                 animate={{
                   opacity: expanded ? 1 : 0,
-                  width: expanded ? "auto" : 0,
+                  width: expanded ? 174 : 0,
                   x: expanded ? 0 : -8,
                 }}
-                transition={{ duration: 0.18 }}
+                transition={{
+                  duration: 0.18,
+                  ease: [0.22, 1, 0.36, 1],
+                }}
                 className="overflow-hidden whitespace-nowrap"
               >
                 <div className="rounded-full bg-white/22 px-4 py-2 text-sm font-semibold text-slate-900 ring-1 ring-white/45">
@@ -124,10 +135,16 @@ export default function Sidebar() {
             <nav className="flex flex-col gap-2">
               {visibleLinks.map((link) => {
                 const Icon = link.icon;
-                const active = pathname === link.href;
+                const active =
+                  pathname === link.href ||
+                  pathname.startsWith(`${link.href}/`);
 
                 return (
-                  <Link key={link.href} href={link.href} aria-label={link.label}>
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    aria-label={link.label}
+                  >
                     <SidebarItem
                       active={active}
                       expanded={expanded}
@@ -146,6 +163,7 @@ export default function Sidebar() {
                 label="Profile"
                 onClick={() => router.push("/profile")}
               />
+
               <RailAction
                 expanded={expanded}
                 icon={Settings}
@@ -173,7 +191,11 @@ function SidebarItem({
 }) {
   return (
     <motion.div
-      whileHover={expanded ? MotionHover.sidebar : MotionHover.button}
+      whileHover={
+        expanded
+          ? MotionHover.sidebar
+          : MotionHover.button
+      }
       whileTap={MotionPress.sidebar}
       transition={itemSpring}
       className="relative flex h-12 items-center gap-3 rounded-[20px] px-[15px] text-slate-900 transition-colors hover:text-black"
@@ -194,7 +216,9 @@ function SidebarItem({
       )}
 
       <motion.span
-        animate={{ scale: active ? 1.08 : 1 }}
+        animate={{
+          scale: active ? 1.08 : 1,
+        }}
         transition={{
           type: "spring",
           stiffness: 500,
@@ -211,10 +235,13 @@ function SidebarItem({
         initial={false}
         animate={{
           opacity: expanded ? 1 : 0,
-          width: expanded ? "auto" : 0,
+          width: expanded ? 180 : 0,
           x: expanded ? 0 : -6,
         }}
-        transition={{ duration: 0.16 }}
+        transition={{
+          duration: 0.16,
+          ease: [0.22, 1, 0.36, 1],
+        }}
         className="relative z-10 overflow-hidden whitespace-nowrap text-[15px] font-medium"
       >
         {label}
@@ -238,21 +265,32 @@ function RailAction({
     <motion.button
       type="button"
       onClick={onClick}
-      whileHover={expanded ? MotionHover.sidebar : MotionHover.button}
+      whileHover={
+        expanded
+          ? MotionHover.sidebar
+          : MotionHover.button
+      }
       whileTap={MotionPress.sidebar}
       transition={itemSpring}
-      className="relative flex h-12 items-center gap-3 rounded-[20px] px-[15px] text-left text-slate-900 transition-colors hover:bg-white/16"
+      className="relative flex h-12 w-full items-center gap-3 rounded-[20px] px-[15px] text-left text-slate-900 transition-colors hover:bg-white/16"
     >
-      <Icon size={21} strokeWidth={2.1} className="relative z-10 shrink-0" />
+      <Icon
+        size={21}
+        strokeWidth={2.1}
+        className="relative z-10 shrink-0"
+      />
 
       <motion.span
         initial={false}
         animate={{
           opacity: expanded ? 1 : 0,
-          width: expanded ? "auto" : 0,
+          width: expanded ? 180 : 0,
           x: expanded ? 0 : -6,
         }}
-        transition={{ duration: 0.16 }}
+        transition={{
+          duration: 0.16,
+          ease: [0.22, 1, 0.36, 1],
+        }}
         className="relative z-10 overflow-hidden whitespace-nowrap text-[15px] font-medium"
       >
         {label}
