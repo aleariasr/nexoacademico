@@ -6,26 +6,72 @@ from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.views import APIView
 
-from .models import AcademicTask, Course, TaskHistory, TaskType
+from .models import (
+    AcademicTask,
+    Course,
+    CourseEnrollment,
+    TaskHistory,
+    TaskSubmission,
+    TaskType,
+)
 from .serializers import (
     AcademicTaskSerializer,
+    CourseEnrollmentSerializer,
     CourseSerializer,
     DashboardSerializer,
     TaskHistorySerializer,
+    TaskSubmissionSerializer,
     TaskTypeSerializer,
 )
 
+def is_admin_user(user):
+    return (
+        user.is_staff
+        or hasattr(user, "profile")
+        and user.profile.role == "admin"
+    )
+
+def is_professor_user(user):
+    return (
+        hasattr(user, "profile")
+        and user.profile.role == "professor"
+    )
+
+
+def can_manage_courses(user):
+    return is_admin_user(user)
+
+
+def can_manage_course_content(user, course):
+    return (
+        is_admin_user(user)
+        or course.professor_user_id == user.id
+    )
 
 class CourseViewSet(viewsets.ModelViewSet):
     serializer_class = CourseSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return Course.objects.filter(user=self.request.user)
+        if is_admin_user(self.request.user):
+            return Course.objects.all()
+
+        if is_professor_user(self.request.user):
+            return Course.objects.filter(
+                professor_user=self.request.user,
+            )
+
+        return Course.objects.filter(
+            enrollments__student=self.request.user,
+        ).distinct()
 
     def perform_create(self, serializer):
+        if not can_manage_courses(self.request.user):
+            raise PermissionDenied("Only administrators can create courses.")
+
         serializer.save(user=self.request.user)
 
 
@@ -34,6 +80,83 @@ class TaskTypeViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = TaskTypeSerializer
     permission_classes = [IsAuthenticated]
 
+class CourseEnrollmentViewSet(viewsets.ModelViewSet):
+    serializer_class = CourseEnrollmentSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        queryset = CourseEnrollment.objects.select_related(
+            "course",
+            "student",
+        )
+
+        if is_admin_user(self.request.user):
+            return queryset
+
+        if is_professor_user(self.request.user):
+            return queryset.filter(
+                course__professor_user=self.request.user,
+            )
+
+        return queryset.filter(
+            student=self.request.user,
+        )
+
+    def perform_create(self, serializer):
+        course = serializer.validated_data["course"]
+
+        if not can_manage_course_content(self.request.user, course):
+            raise PermissionDenied(
+                "Only administrators or assigned professors can enroll students."
+            )
+
+        serializer.save()
+
+
+class TaskSubmissionViewSet(viewsets.ModelViewSet):
+    serializer_class = TaskSubmissionSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        queryset = TaskSubmission.objects.select_related(
+            "academic_task",
+            "academic_task__course",
+            "student",
+        )
+
+        if is_admin_user(self.request.user):
+            return queryset
+
+        if is_professor_user(self.request.user):
+            return queryset.filter(
+                academic_task__course__professor_user=self.request.user,
+            )
+
+        return queryset.filter(student=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(student=self.request.user)
+
+    def perform_update(self, serializer):
+        submission = self.get_object()
+        course = submission.academic_task.course
+
+        if not can_manage_course_content(self.request.user, course):
+            raise PermissionDenied(
+                "Only administrators or assigned professors can review submissions."
+            )
+
+        submission = serializer.save()
+        submission.status = TaskSubmission.STATUS_REVIEWED
+        submission.reviewed_at = timezone.now()
+        submission.save(
+            update_fields=[
+                "status",
+                "reviewed_at",
+                "grade",
+                "feedback",
+            ]
+        )
 
 class AcademicTaskViewSet(viewsets.ModelViewSet):
     serializer_class = AcademicTaskSerializer
@@ -61,9 +184,18 @@ class AcademicTaskViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = (
             AcademicTask.objects
-            .filter(user=self.request.user, is_deleted=False)
+            .filter(is_deleted=False)
             .select_related("course", "task_type")
         )
+
+        if is_professor_user(self.request.user):
+            queryset = queryset.filter(
+                course__professor_user=self.request.user,
+            )
+        elif not is_admin_user(self.request.user):
+            queryset = queryset.filter(
+                course__enrollments__student=self.request.user,
+            )
 
         status_value = self.request.query_params.get("status")
         priority = self.request.query_params.get("priority")
@@ -89,6 +221,13 @@ class AcademicTaskViewSet(viewsets.ModelViewSet):
         return queryset
 
     def perform_create(self, serializer):
+        course = serializer.validated_data["course"]
+
+        if not can_manage_course_content(self.request.user, course):
+            raise PermissionDenied(
+                "Only administrators or assigned professors can create tasks."
+            )
+
         academic_task = serializer.save(user=self.request.user)
 
         TaskHistory.objects.create(
@@ -109,24 +248,22 @@ class AcademicTaskViewSet(viewsets.ModelViewSet):
         )
 
     def perform_destroy(self, instance):
-        with connection.cursor() as cursor:
-            cursor.callproc(
-                "sp_soft_delete_task",
-                [
-                    instance.id,
-                    self.request.user.id,
-                ],
+        if not can_manage_course_content(self.request.user, instance.course):
+            raise PermissionDenied(
+                "Only administrators or the assigned professor can delete tasks."
             )
 
-        instance.refresh_from_db()
+        instance.is_deleted = True
+        instance.deleted_at = timezone.now()
+        instance.save(update_fields=["is_deleted", "deleted_at", "updated_at"])
 
         TaskHistory.objects.create(
             academic_task=instance,
             user=self.request.user,
             action="deleted",
-            description=f'Task "{instance.title}" was soft deleted using stored procedure sp_soft_delete_task.',
+            description=f'Task "{instance.title}" was soft deleted.',
         )
-
+        
     @action(detail=True, methods=["get"], url_path="history")
     def history(self, request, pk=None):
         academic_task = self.get_object()
@@ -140,23 +277,28 @@ class DashboardAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        with connection.cursor() as cursor:
-            cursor.callproc(
-                "sp_get_user_dashboard",
-                [request.user.id],
-            )
-            row = cursor.fetchone()
-
-        active_courses = row[0] if row else 0
-        pending_tasks = row[1] if row else 0
-        in_progress_tasks = row[2] if row else 0
-        completed_tasks = row[3] if row else 0
-        overdue_tasks = row[4] if row else 0
+        courses = CourseViewSet()
+        courses.request = request
+        visible_courses = courses.get_queryset()
 
         tasks = (
             AcademicTask.objects
-            .filter(user=request.user, is_deleted=False)
+            .filter(course__in=visible_courses, is_deleted=False)
             .select_related("course", "task_type")
+        )
+
+        active_courses = visible_courses.filter(
+            status=Course.STATUS_ACTIVE,
+        ).count()
+
+        pending_tasks = tasks.filter(status=AcademicTask.STATUS_PENDING).count()
+        in_progress_tasks = tasks.filter(status=AcademicTask.STATUS_IN_PROGRESS).count()
+        completed_tasks = tasks.filter(status=AcademicTask.STATUS_COMPLETED).count()
+
+        overdue_tasks = (
+            tasks.filter(due_date__lt=timezone.now())
+            .exclude(status=AcademicTask.STATUS_COMPLETED)
+            .count()
         )
 
         total_tasks = tasks.count()
@@ -169,17 +311,17 @@ class DashboardAPIView(APIView):
 
         upcoming_tasks = tasks.order_by("due_date")[:5]
 
-        data = {
-            "active_courses": active_courses,
-            "pending_tasks": pending_tasks,
-            "in_progress_tasks": in_progress_tasks,
-            "completed_tasks": completed_tasks,
-            "overdue_tasks": overdue_tasks,
-            "completion_rate": completion_rate,
-            "upcoming_tasks": upcoming_tasks,
-        }
-
-        serializer = DashboardSerializer(data)
+        serializer = DashboardSerializer(
+            {
+                "active_courses": active_courses,
+                "pending_tasks": pending_tasks,
+                "in_progress_tasks": in_progress_tasks,
+                "completed_tasks": completed_tasks,
+                "overdue_tasks": overdue_tasks,
+                "completion_rate": completion_rate,
+                "upcoming_tasks": upcoming_tasks,
+            }
+        )
 
         return Response(serializer.data)
 
@@ -188,8 +330,14 @@ class StatisticsAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        courses = Course.objects.filter(user=request.user)
-        tasks = AcademicTask.objects.filter(user=request.user, is_deleted=False)
+        courses_view = CourseViewSet()
+        courses_view.request = request
+        courses = courses_view.get_queryset()
+
+        tasks = AcademicTask.objects.filter(
+            course__in=courses,
+            is_deleted=False,
+        )
 
         total_tasks = tasks.count()
         completed_tasks = tasks.filter(status=AcademicTask.STATUS_COMPLETED).count()

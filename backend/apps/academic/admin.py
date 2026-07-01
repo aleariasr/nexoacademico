@@ -3,8 +3,10 @@ from django.contrib import admin
 from .models import (
     AcademicTask,
     Course,
+    CourseEnrollment,
     TaskAttachment,
     TaskHistory,
+    TaskSubmission,
     TaskType,
     UserProfile,
 )
@@ -56,6 +58,25 @@ class CourseAdmin(admin.ModelAdmin):
         "created_at",
     )
 
+@admin.register(CourseEnrollment)
+class CourseEnrollmentAdmin(admin.ModelAdmin):
+    list_display = (
+        "course",
+        "student",
+        "enrolled_at",
+    )
+    search_fields = (
+        "course__name",
+        "course__code",
+        "student__username",
+        "student__email",
+    )
+    list_filter = (
+        "course",
+    )
+    readonly_fields = (
+        "enrolled_at",
+    )
 
 @admin.register(TaskType)
 class TaskTypeAdmin(admin.ModelAdmin):
@@ -102,6 +123,31 @@ class AcademicTaskAdmin(admin.ModelAdmin):
     )
     date_hierarchy = "due_date"
 
+@admin.register(TaskSubmission)
+class TaskSubmissionAdmin(admin.ModelAdmin):
+    list_display = (
+        "academic_task",
+        "student",
+        "status",
+        "grade",
+        "submitted_at",
+        "reviewed_at",
+    )
+    search_fields = (
+        "academic_task__title",
+        "academic_task__course__name",
+        "student__username",
+        "comment",
+        "feedback",
+    )
+    list_filter = (
+        "status",
+        "academic_task__course",
+    )
+    readonly_fields = (
+        "submitted_at",
+        "reviewed_at",
+    )
 
 @admin.register(TaskAttachment)
 class TaskAttachmentAdmin(admin.ModelAdmin):

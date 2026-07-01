@@ -1,9 +1,7 @@
 "use client";
 
 import {
-  BarChart3,
   BookOpen,
-  CheckSquare,
   LayoutDashboard,
 } from "lucide-react";
 import { motion } from "framer-motion";
@@ -13,6 +11,9 @@ import { usePathname } from "next/navigation";
 import Surface from "@/components/ui/Surface";
 import { MotionHover } from "@/lib/motion/hover";
 import { MotionPress } from "@/lib/motion/press";
+
+import { getStoredUser, type User } from "@/services/auth.service";
+import { useEffect, useMemo, useState } from "react";
 
 const links = [
   {
@@ -25,25 +26,35 @@ const links = [
     label: "Courses",
     icon: BookOpen,
   },
-  {
-    href: "/tasks",
-    label: "Tasks",
-    icon: CheckSquare,
-  },
-  {
-    href: "/statistics",
-    label: "Stats",
-    icon: BarChart3,
-  },
 ];
 
 export default function BottomNavigation() {
   const pathname = usePathname();
 
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setUser(getStoredUser());
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
+  }, []);
+
+  const visibleLinks = useMemo(() => {
+    return links.filter((link) => {
+      if ("hiddenForAdmin" in link && link.hiddenForAdmin) {
+        return user?.role !== "admin";
+      }
+
+      return true;
+    });
+  }, [user]);
+
   return (
     <nav className="fixed bottom-5 left-4 right-4 z-50 md:hidden">
-      <Surface variant="floating" radius="2xl" className="grid grid-cols-4 p-2">
-        {links.map((link) => {
+      <Surface variant="floating" radius="2xl" className="grid auto-cols-fr grid-flow-col p-2">
+        {visibleLinks.map((link) => {
           const active = pathname === link.href;
           const Icon = link.icon;
 

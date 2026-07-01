@@ -9,6 +9,7 @@ import { useState } from "react";
 
 type TaskCardProps = {
   task: AcademicTask;
+  canManage?: boolean;
   onEdit: (task: AcademicTask) => void;
   onDelete: (id: number) => void;
 };
@@ -34,7 +35,12 @@ const priorityStyles = {
   critical: "bg-red-500/14 text-red-700",
 };
 
-export default function TaskCard({ task, onEdit, onDelete }: TaskCardProps) {
+export default function TaskCard({
+  task,
+  canManage = true,
+  onEdit,
+  onDelete,
+}: TaskCardProps) {
   const [isDeleting, setIsDeleting] = useState(false);
 
   const handleDelete = async () => {
@@ -135,27 +141,28 @@ export default function TaskCard({ task, onEdit, onDelete }: TaskCardProps) {
             </div>
           )}
         </div>
+        {canManage && (
+          <div className="flex gap-2 border-t border-white/30 pt-4">
+            <Button
+              variant="primary"
+              className="h-9 flex-1 px-3 text-xs"
+              onClick={() => onEdit(task)}
+            >
+              <Edit2 size={14} />
+              Edit
+            </Button>
 
-        <div className="flex gap-2 border-t border-white/30 pt-4">
-          <Button
-            variant="primary"
-            className="h-9 flex-1 px-3 text-xs"
-            onClick={() => onEdit(task)}
-          >
-            <Edit2 size={14} />
-            Edit
-          </Button>
-
-          <Button
-            variant="glass"
-            className="h-9 flex-1 px-3 text-xs text-red-600 hover:bg-red-500/15"
-            onClick={handleDelete}
-            disabled={isDeleting}
-          >
-            <Trash2 size={14} />
-            {isDeleting ? "…" : "Delete"}
-          </Button>
-        </div>
+            <Button
+              variant="glass"
+              className="h-9 flex-1 px-3 text-xs text-red-600 hover:bg-red-500/15"
+              onClick={handleDelete}
+              disabled={isDeleting}
+            >
+              <Trash2 size={14} />
+              {isDeleting ? "…" : "Delete"}
+            </Button>
+          </div>
+        )}
       </GlassCard>
     </motion.article>
   );

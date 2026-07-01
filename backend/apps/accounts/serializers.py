@@ -116,3 +116,93 @@ class LoginSerializer(serializers.Serializer):
         data["user"] = user
 
         return data
+    
+class UserManagementSerializer(serializers.ModelSerializer):
+    role = serializers.ChoiceField(
+        choices=UserProfile.ROLE_CHOICES,
+        write_only=True,
+        required=True,
+    )
+    degree_program = serializers.CharField(
+        write_only=True,
+        required=False,
+        allow_blank=True,
+    )
+    password = serializers.CharField(
+        write_only=True,
+        required=False,
+        min_length=8,
+    )
+
+    profile_role = serializers.CharField(
+        source="profile.role",
+        read_only=True,
+    )
+    profile_degree_program = serializers.CharField(
+        source="profile.degree_program",
+        read_only=True,
+    )
+
+    class Meta:
+        model = User
+        fields = [
+            "id",
+            "username",
+            "first_name",
+            "last_name",
+            "email",
+            "password",
+            "is_active",
+            "role",
+            "degree_program",
+            "profile_role",
+            "profile_degree_program",
+        ]
+        read_only_fields = [
+            "id",
+            "profile_role",
+            "profile_degree_program",
+        ]
+
+    def create(self, validated_data):
+        role = validated_data.pop("role")
+        degree_program = validated_data.pop("degree_program", "")
+        password = validated_data.pop("password", None)
+
+        user = User.objects.create_user(
+            password=password,
+            **validated_data,
+        )
+
+        UserProfile.objects.create(
+            user=user,
+            role=role,
+            degree_program=degree_program,
+        )
+
+        return user
+
+    def update(self, instance, validated_data):
+        role = validated_data.pop("role", None)
+        degree_program = validated_data.pop("degree_program", None)
+        password = validated_data.pop("password", None)
+
+        for field, value in validated_data.items():
+            setattr(instance, field, value)
+
+        if password:
+            instance.set_password(password)
+
+        instance.save()
+
+        profile, _ = UserProfile.objects.get_or_create(user=instance)
+
+        if role:
+            profile.role = role
+
+        if degree_program is not None:
+            profile.degree_program = degree_program
+
+        profile.save()
+
+        return instance

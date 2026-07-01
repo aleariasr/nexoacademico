@@ -4,7 +4,7 @@ import CourseCard from "@/components/courses/CourseCard";
 import CourseModal from "@/components/courses/CourseModal";
 import DeleteCourseDialog from "@/components/courses/DeleteCourseDialog";
 import { getCourses } from "@/services/academic.service";
-import { getToken } from "@/services/auth.service";
+import { getStoredUser, getToken } from "@/services/auth.service";
 import type { Course } from "@/types/academic";
 import { Plus } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -15,6 +15,7 @@ import PageHeader from "@/components/ui/PageHeader";
 import Button from "@/components/ui/Button";
 import LoadingState from "@/components/ui/LoadingState";
 import SearchBar from "@/components/ui/SearchBar";
+import { type User } from "@/services/auth.service";
 
 export default function CoursesPage() {
   const router = useRouter();
@@ -26,6 +27,8 @@ export default function CoursesPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [courseToDelete, setCourseToDelete] = useState<Course | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [user, setUser] = useState<User | null>(null);
+  const canManageCourses = user?.role === "admin";
 
   const loadCourses = useCallback(async () => {
     try {
@@ -48,6 +51,7 @@ export default function CoursesPage() {
     }
 
     const timeoutId = window.setTimeout(() => {
+      setUser(getStoredUser());
       void loadCourses();
     }, 0);
 
@@ -88,16 +92,18 @@ export default function CoursesPage() {
   return (
     <div className="flex w-full flex-col gap-6 pb-24 md:pb-0">
       <PageHeader title="Courses">
-        <Button
-          variant="primary"
-          onClick={() => {
-            setSelectedCourse(null);
-            setCourseModalOpen(true);
-          }}
-        >
-          <Plus size={18} strokeWidth={2.2} />
-          New
-        </Button>
+        {canManageCourses && (
+          <Button
+            variant="primary"
+            onClick={() => {
+              setSelectedCourse(null);
+              setCourseModalOpen(true);
+            }}
+          >
+            <Plus size={18} strokeWidth={2.2} />
+            New
+          </Button>
+        )}
       </PageHeader>
 
       {error && (
@@ -127,15 +133,20 @@ export default function CoursesPage() {
                 key={course.id}
                 course={course}
                 onEdit={(course) => {
+                  if (!canManageCourses) return;
                   setSelectedCourse(course);
                   setCourseModalOpen(true);
                 }}
                 onDelete={(id) => {
+                  if (!canManageCourses) return;
+
                   const courseToDelete = courses.find((item) => item.id === id);
                   if (courseToDelete) {
                     handleDeleteCourse(courseToDelete);
                   }
                 }}
+                canManage={canManageCourses}
+                onOpen={(course) => router.push(`/courses/${course.id}`)}
               />
             ))}
           </div>

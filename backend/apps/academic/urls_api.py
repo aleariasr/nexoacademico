@@ -3,9 +3,11 @@ from rest_framework.routers import DefaultRouter
 
 from .views_api import (
     AcademicTaskViewSet,
+    CourseEnrollmentViewSet,
     CourseViewSet,
     DashboardAPIView,
     StatisticsAPIView,
+    TaskSubmissionViewSet,
     TaskTypeViewSet,
 )
 
@@ -27,6 +29,18 @@ router.register(
     "tasks",
     AcademicTaskViewSet,
     basename="tasks",
+)
+
+router.register(
+    "enrollments",
+    CourseEnrollmentViewSet,
+    basename="enrollments",
+)
+
+router.register(
+    "submissions",
+    TaskSubmissionViewSet,
+    basename="submissions",
 )
 
 urlpatterns = [

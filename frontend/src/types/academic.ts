@@ -7,6 +7,8 @@ export type Course = {
   color: string;
   status: "active" | "completed";
   created_at?: string;
+  professor_user: number | null;
+  professor_username: string | null;
 };
 
 export type TaskType = {
@@ -49,6 +51,7 @@ export type CoursePayload = {
   credits: number;
   color?: string;
   status?: "active" | "completed";
+  professor_user?: number | null;
 };
 
 export type TaskPayload = {
@@ -63,4 +66,48 @@ export type TaskPayload = {
   reminder_at?: string | null;
   weight_percentage?: string | null;
   grade?: string | null;
+};
+
+export type CourseEnrollment = {
+  id: number;
+  course: number;
+  course_name: string;
+  course_code: string;
+  student: number;
+  student_username: string;
+  student_email: string;
+  enrolled_at: string;
+};
+
+export type TaskSubmission = {
+  id: number;
+  academic_task: number;
+  task_title: string;
+  course_name: string;
+  student: number;
+  student_username: string;
+  comment: string;
+  file: string | null;
+  status: "submitted" | "reviewed";
+  grade: string | null;
+  feedback: string;
+  submitted_at: string;
+  reviewed_at: string | null;
+  course: number;
+};
+
+export type EnrollmentPayload = {
+  course: number;
+  student: number;
+};
+
+export type SubmissionPayload = {
+  academic_task: number;
+  comment?: string;
+  file?: File | null;
+};
+
+export type ReviewSubmissionPayload = {
+  grade?: string | null;
+  feedback?: string;
 };

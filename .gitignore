@@ -1,7 +1,18 @@
+# Environment and secrets
+.env
+.env.*
+!.env.example
+backend/.env
+frontend/.env.local
+
 # Python
 __pycache__/
 *.py[cod]
-*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
 
 # Virtual environments
 .venv/
@@ -9,29 +20,33 @@ venv/
 env/
 
 # Django
-*.sqlite3
-db.sqlite3
-media/
-staticfiles/
+backend/db.sqlite3
+backend/*.sqlite3
+backend/media/
+!backend/media/.gitkeep
+backend/staticfiles/
+*.log
 
-# Environment variables
-.env
-.env.local
+# Next.js
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/build/
+frontend/dist/
+frontend/coverage/
+frontend/.vercel/
+frontend/*.tsbuildinfo
+frontend/next-env.d.ts
 
-# Node / Next.js
-node_modules/
-.next/
-out/
-dist/
-build/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# OS / Editor
+# OS and editors
 .DS_Store
+Thumbs.db
 .vscode/
 .idea/
 
-# Temporary
-current_requirements.txt
+# Local archives
+*.zip
+*.rar
+*.7z
+*.tar
+*.tar.gz

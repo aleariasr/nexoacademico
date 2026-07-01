@@ -6,10 +6,12 @@ from django.utils import timezone
 
 class UserProfile(models.Model):
     ROLE_ADMIN = "admin"
+    ROLE_PROFESSOR = "professor"
     ROLE_STUDENT = "student"
 
     ROLE_CHOICES = [
         (ROLE_ADMIN, "Administrator"),
+        (ROLE_PROFESSOR, "Professor"),
         (ROLE_STUDENT, "Student"),
     ]
 
@@ -45,6 +47,14 @@ class Course(models.Model):
         on_delete=models.CASCADE,
         related_name="courses",
     )
+
+    professor_user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="assigned_courses",
+    )
     name = models.CharField(max_length=120)
     code = models.CharField(max_length=20)
     professor = models.CharField(max_length=120, blank=True)
@@ -68,7 +78,31 @@ class Course(models.Model):
 
     def __str__(self):
         return f"{self.code} - {self.name}"
+    
+class CourseEnrollment(models.Model):
+    course = models.ForeignKey(
+        Course,
+        on_delete=models.CASCADE,
+        related_name="enrollments",
+    )
+    student = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="course_enrollments",
+    )
+    enrolled_at = models.DateTimeField(default=timezone.now)
 
+    class Meta:
+        ordering = ["course__name", "student__username"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["course", "student"],
+                name="uq_course_student_enrollment",
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.student.username} enrolled in {self.course.code}"
 
 class TaskType(models.Model):
     name = models.CharField(max_length=80, unique=True)
@@ -179,6 +213,53 @@ class AcademicTask(models.Model):
             and not self.is_deleted
         )
 
+class TaskSubmission(models.Model):
+    STATUS_SUBMITTED = "submitted"
+    STATUS_REVIEWED = "reviewed"
+
+    STATUS_CHOICES = [
+        (STATUS_SUBMITTED, "Submitted"),
+        (STATUS_REVIEWED, "Reviewed"),
+    ]
+
+    academic_task = models.ForeignKey(
+        AcademicTask,
+        on_delete=models.CASCADE,
+        related_name="submissions",
+    )
+    student = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="task_submissions",
+    )
+    comment = models.TextField(blank=True)
+    file = models.FileField(upload_to="task_submissions/", null=True, blank=True)
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default=STATUS_SUBMITTED,
+    )
+    grade = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        null=True,
+        blank=True,
+    )
+    feedback = models.TextField(blank=True)
+    submitted_at = models.DateTimeField(default=timezone.now)
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-submitted_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["academic_task", "student"],
+                name="uq_task_student_submission",
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.student.username} - {self.academic_task.title}"
 
 class TaskAttachment(models.Model):
     academic_task = models.ForeignKey(

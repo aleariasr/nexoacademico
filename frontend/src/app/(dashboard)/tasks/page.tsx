@@ -5,7 +5,7 @@ import DeleteTaskDialog from "@/components/tasks/DeleteTaskDialog";
 import TaskModal from "@/components/tasks/TaskModal";
 import { getTasks } from "@/services/academic.service";
 import { getCourses } from "@/services/academic.service";
-import { getToken } from "@/services/auth.service";
+import { getStoredUser, getToken } from "@/services/auth.service";
 import type { AcademicTask, Course } from "@/types/academic";
 import { Plus } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
@@ -17,6 +17,7 @@ import PageHeader from "@/components/ui/PageHeader";
 import Select from "@/components/ui/Select";
 import LoadingState from "@/components/ui/LoadingState";
 import SearchBar from "@/components/ui/SearchBar";
+import type { User } from "@/services/auth.service";
 
 export default function TasksPage() {
   const [state, setState] = useState({
@@ -33,6 +34,8 @@ export default function TasksPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<AcademicTask["status"] | "all">("all");
   const [priorityFilter, setPriorityFilter] = useState<AcademicTask["priority"] | "all">("all");
+  const [user, setUser] = useState<User | null>(null);
+  const canManageTasks = user?.role === "admin" || user?.role === "professor";
 
   const loadTasks = useCallback(async () => {
     try {
@@ -57,6 +60,7 @@ export default function TasksPage() {
     }
 
     const timeoutId = window.setTimeout(() => {
+      setUser(getStoredUser());
       void loadTasks();
     }, 0);
 
@@ -96,16 +100,18 @@ export default function TasksPage() {
   return (
     <div className="flex w-full flex-col gap-6 pb-24 md:pb-0">
       <PageHeader title="Tasks">
-        <Button
-          variant="primary"
-          onClick={() => {
-            setSelectedTask(null);
-            setTaskModalOpen(true);
-          }}
-        >
-          <Plus size={18} strokeWidth={2.2} />
-          New
-        </Button>
+        {canManageTasks && (
+          <Button
+            variant="primary"
+            onClick={() => {
+              setSelectedTask(null);
+              setTaskModalOpen(true);
+            }}
+          >
+            <Plus size={18} strokeWidth={2.2} />
+            New
+          </Button>
+        )}
       </PageHeader>
 
       {state.error && (
@@ -166,15 +172,19 @@ export default function TasksPage() {
               key={task.id}
               task={task}
               onEdit={(task) => {
+                if (!canManageTasks) return;
                 setSelectedTask(task);
                 setTaskModalOpen(true);
               }}
               onDelete={(id) => {
+                if (!canManageTasks) return;
+
                 const taskToDelete = state.tasks.find((t) => t.id === id);
                 if (taskToDelete) {
                   handleDeleteTask(taskToDelete);
                 }
               }}
+              canManage={canManageTasks}
             />
           ))}
         </div>

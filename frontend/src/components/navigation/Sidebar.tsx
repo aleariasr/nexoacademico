@@ -2,18 +2,18 @@
 
 import { motion } from "framer-motion";
 import {
-  BarChart3,
   BookOpen,
-  CheckSquare,
   ChevronLeft,
   ChevronRight,
   LayoutDashboard,
   Settings,
   UserRound,
+  Users,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { getStoredUser, type User } from "@/services/auth.service";
+import { useEffect, useMemo, useState } from "react";
 
 import Surface from "@/components/ui/Surface";
 import { MotionHover } from "@/lib/motion/hover";
@@ -21,9 +21,8 @@ import { MotionPress } from "@/lib/motion/press";
 
 const mainLinks = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/users", label: "Users", icon: Users, adminOnly: true },
   { href: "/courses", label: "Courses", icon: BookOpen },
-  { href: "/tasks", label: "Tasks", icon: CheckSquare },
-  { href: "/statistics", label: "Statistics", icon: BarChart3 },
 ];
 
 const spring = {
@@ -42,11 +41,34 @@ const itemSpring = {
 export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  const [user, setUser] = useState<User | null>(null);
 
   const [expanded, setExpanded] = useState(() => {
     if (typeof window === "undefined") return false;
     return window.sessionStorage.getItem("sidebar-expanded") === "true";
   });
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setUser(getStoredUser());
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
+  }, []);
+
+  const visibleLinks = useMemo(() => {
+    return mainLinks.filter((link) => {
+      if ("adminOnly" in link && link.adminOnly) {
+        return user?.role === "admin";
+      }
+
+      if ("hiddenForAdmin" in link && link.hiddenForAdmin) {
+        return user?.role !== "admin";
+      }
+
+      return true;
+    });
+  }, [user]);
 
   function toggleSidebar() {
     setExpanded((value) => {
@@ -57,7 +79,7 @@ export default function Sidebar() {
   }
 
   return (
-    <aside className="sticky top-0 hidden h-screen shrink-0 p-5 md:block">
+    <aside className="fixed left-0 top-0 z-40 hidden h-screen w-[112px] shrink-0 p-5 md:block">
       <motion.div
         initial={false}
         animate={{ width: expanded ? 278 : 82 }}
@@ -100,7 +122,7 @@ export default function Sidebar() {
             </div>
 
             <nav className="flex flex-col gap-2">
-              {mainLinks.map((link) => {
+              {visibleLinks.map((link) => {
                 const Icon = link.icon;
                 const active = pathname === link.href;
 

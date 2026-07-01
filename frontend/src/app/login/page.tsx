@@ -1,49 +1,87 @@
 "use client";
 
-import { ArrowRight, LockKeyhole, UserRound } from "lucide-react";
+import { ArrowRight, LockKeyhole, Mail, UserRound } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import Button from "@/components/ui/Button";
 import GlassCard from "@/components/ui/GlassCard";
 import Surface from "@/components/ui/Surface";
-import { login, saveAuthSession } from "@/services/auth.service";
+import {
+  login,
+  register,
+  saveAuthSession,
+  type RegisterPayload,
+} from "@/services/auth.service";
 import { motion } from "framer-motion";
 
-type LoginStatus = "idle" | "loading" | "leaving" | "error";
+type AuthStatus = "idle" | "loading" | "leaving" | "error";
+type AuthMode = "login" | "register";
 
 export default function LoginPage() {
   const router = useRouter();
 
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [status, setStatus] = useState<LoginStatus>("idle");
+  const [mode, setMode] = useState<AuthMode>("login");
+  const [status, setStatus] = useState<AuthStatus>("idle");
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const [form, setForm] = useState({
+    username: "",
+    first_name: "",
+    last_name: "",
+    email: "",
+    password: "",
+    password_confirm: "",
+  });
 
   const isBusy = status === "loading" || status === "leaving";
 
   const buttonState =
     status === "loading" ? "loading" : status === "leaving" ? "success" : "idle";
 
+  function updateField(field: keyof typeof form, value: string) {
+    setForm((current) => ({
+      ...current,
+      [field]: value,
+    }));
+  }
+
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setStatus("loading");
+    setErrorMessage("");
 
     try {
-      const data = await login(username, password);
+      const data =
+        mode === "login"
+          ? await login(form.username, form.password)
+          : await register(form as RegisterPayload);
+
       saveAuthSession(data);
       setStatus("leaving");
 
       window.setTimeout(() => {
         router.push("/dashboard");
       }, 260);
-    } catch {
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "Could not complete authentication."
+      );
       setStatus("error");
     }
   }
 
+  function switchMode() {
+    setMode((current) => (current === "login" ? "register" : "login"));
+    setStatus("idle");
+    setErrorMessage("");
+  }
+
   return (
     <main className="relative flex min-h-screen items-center justify-center px-6 py-10">
-      <section className="relative z-10 w-full max-w-[420px]">
+      <section className="relative z-10 w-full max-w-[460px]">
         <GlassCard radius="liquid" variant="floating" className="p-8 md:p-9">
           <motion.form
             onSubmit={handleSubmit}
@@ -66,8 +104,14 @@ export default function LoginPage() {
               </p>
 
               <h1 className="text-2xl font-semibold tracking-tight text-slate-950">
-                Welcome back
+                {mode === "login" ? "Welcome back" : "Create account"}
               </h1>
+
+              <p className="text-sm text-slate-500">
+                {mode === "login"
+                  ? "Sign in to manage your academic workspace."
+                  : "Register as a student user and start managing courses and tasks."}
+              </p>
             </header>
 
             <div
@@ -77,10 +121,9 @@ export default function LoginPage() {
             >
               <Field label="Username">
                 <UserRound size={18} className="text-slate-500" />
-
                 <input
-                  value={username}
-                  onChange={(event) => setUsername(event.target.value)}
+                  value={form.username}
+                  onChange={(event) => updateField("username", event.target.value)}
                   className="h-full min-w-0 flex-1 bg-transparent text-slate-950 outline-none placeholder:text-slate-400"
                   autoComplete="username"
                   placeholder="Username"
@@ -89,25 +132,90 @@ export default function LoginPage() {
                 />
               </Field>
 
+              {mode === "register" && (
+                <>
+                  <Field label="First name">
+                    <UserRound size={18} className="text-slate-500" />
+                    <input
+                      value={form.first_name}
+                      onChange={(event) =>
+                        updateField("first_name", event.target.value)
+                      }
+                      className="h-full min-w-0 flex-1 bg-transparent text-slate-950 outline-none placeholder:text-slate-400"
+                      placeholder="First name"
+                      disabled={isBusy}
+                    />
+                  </Field>
+
+                  <Field label="Last name">
+                    <UserRound size={18} className="text-slate-500" />
+                    <input
+                      value={form.last_name}
+                      onChange={(event) =>
+                        updateField("last_name", event.target.value)
+                      }
+                      className="h-full min-w-0 flex-1 bg-transparent text-slate-950 outline-none placeholder:text-slate-400"
+                      placeholder="Last name"
+                      disabled={isBusy}
+                    />
+                  </Field>
+
+                  <Field label="Email">
+                    <Mail size={18} className="text-slate-500" />
+                    <input
+                      value={form.email}
+                      onChange={(event) => updateField("email", event.target.value)}
+                      type="email"
+                      className="h-full min-w-0 flex-1 bg-transparent text-slate-950 outline-none placeholder:text-slate-400"
+                      autoComplete="email"
+                      placeholder="email@example.com"
+                      disabled={isBusy}
+                      required
+                    />
+                  </Field>
+                </>
+              )}
+
               <Field label="Password">
                 <LockKeyhole size={18} className="text-slate-500" />
-
                 <input
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
+                  value={form.password}
+                  onChange={(event) => updateField("password", event.target.value)}
                   type="password"
                   className="h-full min-w-0 flex-1 bg-transparent text-slate-950 outline-none placeholder:text-slate-400"
-                  autoComplete="current-password"
+                  autoComplete={
+                    mode === "login" ? "current-password" : "new-password"
+                  }
                   placeholder="Password"
                   disabled={isBusy}
                   required
+                  minLength={mode === "register" ? 8 : undefined}
                 />
               </Field>
+
+              {mode === "register" && (
+                <Field label="Confirm password">
+                  <LockKeyhole size={18} className="text-slate-500" />
+                  <input
+                    value={form.password_confirm}
+                    onChange={(event) =>
+                      updateField("password_confirm", event.target.value)
+                    }
+                    type="password"
+                    className="h-full min-w-0 flex-1 bg-transparent text-slate-950 outline-none placeholder:text-slate-400"
+                    autoComplete="new-password"
+                    placeholder="Confirm password"
+                    disabled={isBusy}
+                    required
+                    minLength={8}
+                  />
+                </Field>
+              )}
             </div>
 
             {status === "error" && (
               <p className="rounded-[18px] border border-rose-400/20 bg-rose-400/10 px-4 py-3 text-sm font-medium text-rose-700">
-                Could not sign in. Check your credentials or backend endpoint.
+                {errorMessage}
               </p>
             )}
 
@@ -118,9 +226,20 @@ export default function LoginPage() {
               className="h-12 w-full"
               disabled={isBusy}
             >
-              Continue
+              {mode === "login" ? "Continue" : "Create account"}
               <ArrowRight size={18} strokeWidth={2.2} />
             </Button>
+
+            <button
+              type="button"
+              onClick={switchMode}
+              className="w-full text-center text-sm font-semibold text-slate-600 transition hover:text-slate-950"
+              disabled={isBusy}
+            >
+              {mode === "login"
+                ? "Need an account? Register"
+                : "Already have an account? Sign in"}
+            </button>
           </motion.form>
         </GlassCard>
       </section>

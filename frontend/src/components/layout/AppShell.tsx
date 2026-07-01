@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import BottomNavigation from "../navigation/BottomNavigation";
 import Sidebar from "../navigation/Sidebar";
 import Button from "@/components/ui/Button";
-import { MotionReveal, MotionSidebar } from "@/components/motion";
+import { MotionReveal } from "@/components/motion";
 
 type AppShellProps = {
   children: React.ReactNode;
@@ -22,13 +22,11 @@ export default function AppShell({ children }: AppShellProps) {
   }
 
   return (
-    <div className="relative min-h-screen overflow-hidden">
+    <div className="relative min-h-screen overflow-x-hidden">
       <div className="relative z-10 flex min-h-screen">
-        <MotionSidebar>
-          <Sidebar />
-        </MotionSidebar>
+        <Sidebar />
 
-        <main className="min-w-0 flex-1 px-5 py-6 md:px-8 md:py-8">
+        <main className="min-w-0 flex-1 px-5 py-6 md:ml-[112px] md:px-8 md:py-8">
           <MotionReveal direction="down" delay={0.12} className="mb-5 flex justify-end">
             <Button variant="glass" onClick={handleLogout}>
               <LogOut size={17} />
