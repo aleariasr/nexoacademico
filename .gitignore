@@ -50,3 +50,8 @@ Thumbs.db
 *.7z
 *.tar
 *.tar.gz
+
+# Generated macOS application
+NexoAcadémico.app/
+*.app/
+AppIcon.iconset/
