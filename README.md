@@ -275,12 +275,8 @@ Consulta [Seguridad y configuración](docs/security.md).
 - [Instalación y configuración](docs/setup.md)
 - [Referencia de la API](docs/api.md)
 - [Modelo de datos](docs/database.md)
-- [Guía de capturas](docs/SCREENSHOTS.md)
 
 ## Estado del proyecto
 
 Proyecto académico funcional. Las mejoras recomendadas antes de considerarlo listo para producción incluyen pruebas automatizadas, documentación OpenAPI, almacenamiento externo de archivos, rotación o expiración de tokens y configuración separada por ambiente.
 
-## Licencia
-
-Este proyecto se distribuye con fines académicos. Añade un archivo `LICENSE` antes de permitir reutilización pública del código.
