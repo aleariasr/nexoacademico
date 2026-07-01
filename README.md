@@ -276,7 +276,6 @@ Consulta [Seguridad y configuración](docs/security.md).
 - [Instalación y configuración](docs/setup.md)
 - [Referencia de la API](docs/api.md)
 - [Modelo de datos](docs/database.md)
-- [Pruebas](docs/testing.md)
 - [Guía de capturas](docs/SCREENSHOTS.md)
 
 ## Estado del proyecto
