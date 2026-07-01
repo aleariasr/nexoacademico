@@ -2,13 +2,15 @@
 
 import {
   createContext,
+  useCallback,
   useContext,
-  useEffect,
   useMemo,
-  useState,
+  useSyncExternalStore,
+  type ReactNode,
 } from "react";
 
 const SIDEBAR_STORAGE_KEY = "sidebar-expanded";
+const SIDEBAR_CHANGE_EVENT = "sidebar-expanded-change";
 
 export const SIDEBAR_COLLAPSED_OFFSET = 112;
 export const SIDEBAR_EXPANDED_OFFSET = 330;
@@ -23,28 +25,54 @@ type SidebarContextValue = {
 const SidebarContext = createContext<SidebarContextValue | null>(null);
 
 type SidebarProviderProps = {
-  children: React.ReactNode;
+  children: ReactNode;
 };
 
-export function SidebarProvider({ children }: SidebarProviderProps) {
-  const [expanded, setExpandedState] = useState(false);
+function subscribe(callback: () => void) {
+  window.addEventListener(SIDEBAR_CHANGE_EVENT, callback);
+  window.addEventListener("storage", callback);
 
-  useEffect(() => {
-    const storedValue = window.sessionStorage.getItem(SIDEBAR_STORAGE_KEY);
+  return () => {
+    window.removeEventListener(SIDEBAR_CHANGE_EVENT, callback);
+    window.removeEventListener("storage", callback);
+  };
+}
 
-    setExpandedState(storedValue === "true");
+function getSnapshot() {
+  return (
+    window.sessionStorage.getItem(SIDEBAR_STORAGE_KEY) === "true"
+  );
+}
+
+function getServerSnapshot() {
+  return false;
+}
+
+export function SidebarProvider({
+  children,
+}: SidebarProviderProps) {
+  const expanded = useSyncExternalStore(
+    subscribe,
+    getSnapshot,
+    getServerSnapshot,
+  );
+
+  const setExpanded = useCallback((value: boolean) => {
+    window.sessionStorage.setItem(
+      SIDEBAR_STORAGE_KEY,
+      String(value),
+    );
+
+    window.dispatchEvent(
+      new Event(SIDEBAR_CHANGE_EVENT),
+    );
   }, []);
 
-  function setExpanded(value: boolean) {
-    setExpandedState(value);
-    window.sessionStorage.setItem(SIDEBAR_STORAGE_KEY, String(value));
-  }
+  const toggleSidebar = useCallback(() => {
+    setExpanded(!getSnapshot());
+  }, [setExpanded]);
 
-  function toggleSidebar() {
-    setExpanded(!expanded);
-  }
-
-  const value = useMemo(
+  const value = useMemo<SidebarContextValue>(
     () => ({
       expanded,
       contentOffset: expanded
@@ -53,7 +81,7 @@ export function SidebarProvider({ children }: SidebarProviderProps) {
       toggleSidebar,
       setExpanded,
     }),
-    [expanded],
+    [expanded, setExpanded, toggleSidebar],
   );
 
   return (
@@ -67,7 +95,9 @@ export function useSidebar() {
   const context = useContext(SidebarContext);
 
   if (!context) {
-    throw new Error("useSidebar debe utilizarse dentro de SidebarProvider.");
+    throw new Error(
+      "useSidebar debe utilizarse dentro de SidebarProvider.",
+    );
   }
 
   return context;
